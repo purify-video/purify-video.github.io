@@ -1,0 +1,65 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>purify.video</title>
+  
+	<script type="text/javascript">
+		function init(){
+			let params = new URLSearchParams(window.location.search.substr(1));
+
+			if(params.has('v')){
+				purify(params.get('v').match(/(http:|https:)?(\/\/)?(www\.)?(youtube.com|youtu.be)\/(watch|embed)?(\?v=|\/)?(\S+)?/).pop())
+			}
+		}
+
+		function purify(key){
+			document.querySelectorAll('.iframe')[0].style.display = '';
+			return document.querySelectorAll('iframe')[0].setAttribute('src', 'https://www.youtube-nocookie.com/embed/'+key);
+		}
+	</script>
+
+	<style type="text/css">
+
+		body{
+			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+		}
+		.iframe{
+			max-width: 1024px;
+			height: 560px;
+			margin:auto;
+		}
+	</style>
+
+
+</head>
+
+
+<body onload="init()">
+	
+<section>
+	<h1></h1>
+	<h2>Watch purified YouTube videos with no ads</h2>
+
+	<form method="get" action="/">
+		<input placeholder="Enter YouTube URL" type="input" name="v">
+		<button>Purify</button>
+	</form>
+
+</section>
+
+
+<div class="iframe" style="display: none">
+	<iframe width="100%" height="100%" src=""
+	frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+</div>
+
+<footer>
+	Made with love in Wrocław
+</footer>
+
+</body>
+</html>
+
