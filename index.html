@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>purify.video</title>
+  <title>purify video – watch purified youtube videos with no ads</title>
   
 	<script type="text/javascript">
 		function init(){
@@ -23,14 +23,76 @@
 
 	<style type="text/css">
 
-		body{
-			font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+		* {
+			font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
 		}
+		a, a:hover, a:visited{
+			color: #000;
+		}
+
+		section, footer, header{
+			max-width:1200px;
+			width: 100%;
+			margin: auto;
+		}
+
+		header, footer{
+			text-align: center;
+		}
+
 		.iframe{
 			max-width: 1024px;
 			height: 560px;
 			margin:auto;
+			padding: 25px;
 		}
+
+		input{
+			display: inline;
+			padding: .375rem .75rem;
+			font-size: 1rem;
+			font-weight: 400;
+			line-height: 1.5;
+			color: #212529;
+			background-color: #fff;
+			background-clip: padding-box;
+			border: 1px solid #ced4da;
+			-webkit-appearance: none;
+			-moz-appearance: none;
+			appearance: none;
+			border-radius: .25rem;
+			transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+		}
+
+		button{
+			display: inline-block;
+			font-weight: 400;
+			line-height: 1.5;
+			color: #212529;
+			text-align: center;
+			text-decoration: none;
+			vertical-align: middle;
+			cursor: pointer;
+			-webkit-user-select: none;
+			-moz-user-select: none;
+			user-select: none;
+			background-color: transparent;
+			border: 1px solid transparent;
+			padding: .375rem .75rem;
+			font-size: 1rem;
+			border-radius: .25rem;
+			font-weight: 600;
+			color: #fff;
+			background-color: #46aae9;
+			border-color: #61a2e7;
+		}
+
+		section h1{
+			border-bottom: 1px solid #ededed;
+			font-size: 1.9em;
+		}
+		
+		
 	</style>
 
 
@@ -39,27 +101,60 @@
 
 <body onload="init()">
 	
-<section>
-	<h1></h1>
-	<h2>Watch purified YouTube videos with no ads</h2>
+	<header>
+		<h1>purify video</h1>
+		<h2>Watch purified youtube videos with no ads. Just focus</h2>
 
-	<form method="get" action="/">
-		<input placeholder="Enter YouTube URL" type="input" name="v">
-		<button>Purify</button>
-	</form>
+		<form method="get" action="/">
+			<input placeholder="Enter youtube URL" type="input" name="v">
+			<button>Purify</button>
+		</form>
+	</header>
 
-</section>
+	<section class="iframe" style="display: none">
+		<iframe width="100%" height="100%" src=""
+		frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+	</section>
 
+	<section>
 
-<div class="iframe" style="display: none">
-	<iframe width="100%" height="100%" src=""
-	frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-</div>
+		<!--<h1>How to use?</h1>
 
-<!--<footer>
-	Made with love in Wrocław
-</footer>-->
+		<h2>There are three ways:</h2>
 
+		<h3>1. Enter youtube URL</h3>
+
+		<p>Just enter URL to the form above!</p>
+
+		<h3>2.Add script to the bookmark bar</h3>
+
+		<p>Just enter URL to the form above!</p>
+
+		<h3>3.Use user script</h3>
+
+		<p>Just enter URL to the form above!</p>-->
+
+		<h1>FAQ</h1>
+		<h2>What's this?</h2>
+
+		<p>This app removes distracting comments and sidebar related videos.</p>
+
+		<p>It can be used by teachers, professors, students, parents, organizers and others for:</p>
+		<ul>
+			<li>Clean and minimalistic interface to view YouTube videos</li>
+			<li>Removing inappropriate ads and comments from videos</li>
+			<li>Removing unwanted related videos at the end to show to students</li>
+		</ul>
+
+		<h2>I like your app, how can I help?</h2>
+
+		<p>You can <a href="https://www.buymeacoffee.com/vlaim" target="_blank">donate to author</a>. Thank you!</p>
+	</section>
+
+	<footer>
+		<p><a href="https://github.com/purify-video" target="_blank"> Made with 🖤 in Wrocław</a></p>
+		<p>This website <strong>does not store</strong> any data such as cookies to enable essential site functionality.</p>
+	</footer>
 </body>
 </html>
 
