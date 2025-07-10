@@ -1,124 +1,294 @@
 <!doctype html>
-<html lang="en">
-   <head>
-      <meta charset="utf-8">
-      <meta data-hid="description" name="description" content="Watch purified youtube videos with no ads. Just focus"/>
-      <meta data-hid="og:url" property="og:url" content="https://purify-video.github.io"/>
-      <meta data-hid="og:title" property="og:title" content="purify video – watch purified youtube videos with no ads"/>
-      <meta data-hid="og:description" property="og:description" content="Watch purified youtube videos with no ads. Just focus"/>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="icon" type="image/x-icon" href="/favicon.ico"/>
-      <title>purify video – watch purified youtube videos with no ads</title>
-      <script type="text/javascript">
-         function init(){
-         	let params = new URLSearchParams(window.location.search.substr(1));
-         
-         	if(params.has('v')){
-         		purify(params.get('v').match(/(http:|https:)?(\/\/)?(www\.)?(youtube.com|youtu.be)\/(watch|embed)?(\?v=|\/)?(\S+)?/).pop())
-         	}
-         }
-         
-         function purify(key){
-         	document.querySelectorAll('.iframe')[0].style.display = '';
-         	return document.querySelectorAll('iframe')[0].setAttribute('src', 'https://www.youtube-nocookie.com/embed/'+key);
-         }
-      </script>
-      <style type="text/css">
-         * {
-         font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-         }
-         a, a:hover, a:visited{
-         color: #000;
-         }
-         section, footer, header{
-         max-width:1200px;
-         width: 100%;
-         margin: auto;
-         }
-         header, footer{
-         text-align: center;
-         }
-         .iframe{
-         max-width: 1024px;
-         height: 560px;
-         margin:auto;
-         padding: 25px;
-         }
-         input{
-         display: inline;
-         padding: .375rem .75rem;
-         font-size: 1rem;
-         font-weight: 400;
-         line-height: 1.5;
-         color: #212529;
-         background-color: #fff;
-         background-clip: padding-box;
-         border: 1px solid #ced4da;
-         -webkit-appearance: none;
-         -moz-appearance: none;
-         appearance: none;
-         border-radius: .25rem;
-         transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
-         }
-         button{
-         display: inline-block;
-         font-weight: 400;
-         line-height: 1.5;
-         color: #212529;
-         text-align: center;
-         text-decoration: none;
-         vertical-align: middle;
-         cursor: pointer;
-         -webkit-user-select: none;
-         -moz-user-select: none;
-         user-select: none;
-         background-color: transparent;
-         border: 1px solid transparent;
-         padding: .375rem .75rem;
-         font-size: 1rem;
-         border-radius: .25rem;
-         font-weight: 600;
-         color: #fff;
-         background-color: #46aae9;
-         border-color: #61a2e7;
-         }
-         section h1{
-         border-bottom: 1px solid #ededed;
-         font-size: 1.9em;
-         }
-         code{
-         background: #f7f7f7;
-         padding: 30px 0;
-         display: block;
-         font-family: Courier New;
-         }
-      </style>
-   </head>
-   <body onload="init()">
-      <header>
-         <h1>purify video</h1>
-         <h2>Watch purified youtube videos with no ads. Just focus</h2>
-         <form method="get" action="/">
-            <input placeholder="Enter youtube URL" type="input" name="v">
-            <button>Purify</button>
-         </form>
-      </header>
-      <section class="iframe" style="display: none">
-         <iframe width="100%" height="100%" src=""
-            frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-      </section>
-      <section>
-         <h1>Are you looking for a way to enhance your YouTube viewing experience?</h1>
-  
-         <p>Look no further! This app offers a clean and minimalistic interface for a distraction-free experience.</p>
-         <p>Whether you're a teacher, professor, student, parent, or organizer, you can use our app to remove unwanted and inappropriate ads, comments, and related videos that may appear on the sidebar. </p>
-         <p>You can ensure that your students only see the content you want them to, while also keeping your own experience free of distractions. </p>
-         
-      </section>
-      <footer>
-         <p>Youtube is the source of content</p>
-         <p><a href="https://github.com/purify-video" target="_blank"> Made with 🖤 in Wrocław</a></p>
-         <p>This website <strong>does not store</strong> any data such as cookies to enable essential site functionality.</p>
-      </footer>
-   </body>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Watch purified YouTube videos with no ads. Just focus." />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <title>purify video – watch purified YouTube videos with no ads</title>
+
+  <!-- ✅ Google Font: Noto Sans. -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet" />
+
+  <!-- ✅ Google Material Icons: Light Mode & Dark Mode. -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+  <style>
+    /* ===================
+       Colors palette.
+    ====================== */
+    :root {
+      --bg-light: #f4f4f5;
+      --text-light: #1f1f1f;
+      --bg-dark: #1e1e20;
+      --text-dark: #dcdcdc;
+      --primary: #46aae9;
+      --input-bg: #ffffff;
+      --input-border: #ced4da;
+    }
+
+    /* ===================
+       Themes.
+    ====================== */
+    [data-theme="dark"] {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    [data-theme="light"] {
+      background-color: var(--bg-light);
+      color: var(--text-light);
+    }
+
+    /* ===================
+       Fonts.
+    ====================== */
+    * {
+      box-sizing: border-box;
+      font-family: 'Noto Sans', 'Segoe UI', Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* ===================
+       Layout.
+    ====================== */
+    header, footer, section {
+      max-width: 1200px;
+      margin: auto;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .iframe {
+      max-width: 100%;
+      aspect-ratio: 16 / 9;
+      padding: 1rem;
+      display: none;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* ===================
+       Input and buttons.
+    ====================== */
+    input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 0.25rem;
+      border: 1px solid var(--input-border);
+      background-color: var(--input-bg);
+      color: var(--text-light);
+    }
+
+    button {
+      margin-left: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid #ccc;
+    }
+
+    /* ===================
+       Responsive.
+    ====================== */
+    @media (max-width: 600px) {
+      input[type="text"], button {
+        display: block;
+        width: 100%;
+        margin: 0.5rem 0;
+      }
+    }
+
+    /* ==========================
+       Toggle switch with icons.
+    ============================= */
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      display: flex;
+      align-items: center;
+    }
+
+    .icon-label {
+      font-family: 'Material Symbols Outlined', Arial, sans-serif;
+      font-size: 24px;
+      margin: 0 0.5rem;
+      line-height: 1;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      border-radius: 24px;
+      transition: 0.4s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: 0.4s;
+    }
+
+    input:checked + .slider {
+      background-color: #666;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+
+    /* Fallback icons. */
+    .fallback-icon {
+      display: none;
+      font-size: 16px;
+    }
+
+    .material-symbols-outlined:empty + .fallback-icon {
+      display: inline;
+    }
+  </style>
+
+  <script>
+    /**
+     * Set theme based on system.
+     */
+    function setThemeFromPreference() {
+      const saved = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = saved || (prefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+      document.getElementById("theme-checkbox").checked = theme === "dark";
+    }
+
+    /**
+     * Change the theme and save on localStorage.
+     */
+    function toggleTheme() {
+      const isDark = document.getElementById("theme-checkbox").checked;
+      const newTheme = isDark ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", newTheme);
+      localStorage.setItem("theme", newTheme);
+    }
+
+    /**
+		 * Extract key from URL and start video player.
+     */
+    function purify(key) {
+      document.querySelector('.iframe').style.display = 'block';
+      document.querySelector('iframe').setAttribute('src', 'https://www.youtube-nocookie.com/embed/' + key);
+    }
+
+    /**
+     * Autostart on onload event.
+     */
+    function init() {
+      setThemeFromPreference();
+      const params = new URLSearchParams(window.location.search.substr(1));
+      if (params.has('v')) {
+        const match = params.get('v').match(/(http:|https:)?(\/\/)?(www\.)?(youtube.com|youtu.be)\/(watch|embed)?(\?v=|\/)?([\w-]+)/);
+        if (match && match[7]) purify(match[7]);
+      }
+    }
+
+    window.onload = init;
+  </script>
+</head>
+
+<body>
+  <!-- 🌗 Toggle Switch for Dark/Light mode with fallback icons. -->
+  <div class="theme-toggle">
+    <span class="icon-label">
+      <span class="material-symbols-outlined">light_mode</span>
+      <span class="fallback-icon">☀️</span>
+    </span>
+    <label class="switch">
+      <input type="checkbox" id="theme-checkbox" onchange="toggleTheme()" />
+      <span class="slider"></span>
+    </label>
+    <span class="icon-label">
+      <span class="material-symbols-outlined">dark_mode</span>
+      <span class="fallback-icon">🌙</span>
+    </span>
+  </div>
+
+  <header>
+    <h1>purify video</h1>
+    <h2>Watch purified YouTube videos with no ads. Just focus</h2>
+    <form method="get" action="/">
+      <input type="text" name="v" placeholder="Enter YouTube URL" />
+      <button type="submit">Purify</button>
+    </form>
+  </header>
+
+  <section class="iframe">
+    <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+  </section>
+
+  <section>
+    <h1>Are you looking for a way to enhance your YouTube viewing experience?</h1>
+    <p>This app offers a clean and minimalistic interface for a distraction-free experience.</p>
+    <p>Teachers, students, parents, and organizers can use our app to remove ads, comments, and distracting sidebar videos.</p>
+    <p>Ensure your viewers see only the content you want them to see—nothing more, nothing less.</p>
+  </section>
+
+  <footer>
+    <p>YouTube is the source of all content</p>
+    <p><a href="https://github.com/purify-video" target="_blank">Made with 🖤 in Wrocław</a></p>
+    <p>This website <strong>does not store</strong> any data such as cookies to enable essential site functionality.</p>
+  </footer>
+</body>
 </html>
