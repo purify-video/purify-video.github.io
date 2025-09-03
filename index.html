@@ -77,6 +77,10 @@
       border: none;
     }
 
+    .features {
+      display: none;
+    }
+
     /* ===================
        Input and buttons.
     ====================== */
@@ -241,6 +245,8 @@
       if (params.has('v')) {
         const match = params.get('v').match(/(http:|https:)?(\/\/)?(www\.)?(youtube.com|youtu.be)\/(watch|embed)?(\?v=|\/)?([\w-]+)/);
         if (match && match[7]) purify(match[7]);
+      } else {
+        document.querySelector('.features').style.display = 'block';
       }
     }
 
@@ -278,7 +284,7 @@
     <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
   </section>
 
-  <section>
+  <section class="features">
     <h1>Are you looking for a way to enhance your YouTube viewing experience?</h1>
     <p>This app offers a clean and minimalistic interface for a distraction-free experience.</p>
     <p>Teachers, students, parents, and organizers can use our app to remove ads, comments, and distracting sidebar videos.</p>
