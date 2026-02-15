@@ -253,29 +253,44 @@
       setThemeFromPreference();
       const params = new URLSearchParams(window.location.search.substring(1));
       if (params.has('v')) {
-        const url = new URL(params.get('v'));
-        const urlParams = new URLSearchParams(url.search.substring(1));
-        // See https://developers.google.com/youtube/player_parameters for supported parameters
-        const outputParams = new URLSearchParams();
+        try {
+          let rawUrl = params.get('v');
 
-        if (urlParams.has('t')) {
-          outputParams.append('start', urlParams.get('t'));
-        }
-
-        if (url.hostname == 'youtube.com' || url.hostname.endsWith('.youtube.com')) {
-          if (urlParams.has('list')) {
-            outputParams.append('listType', 'playlist');
-            outputParams.append('list', urlParams.get('list'));
+          // URL parsing will fail if there is no protocol
+          if (!rawUrl.split(".")[0].includes("://")) {
+            rawUrl = "https://" + rawUrl;
           }
 
-          let id = '';
-          if (urlParams.has('v')) {
-            id = urlParams.get('v');
+          const url = new URL(rawUrl);
+          const urlParams = new URLSearchParams(url.search.substring(1));
+          // See https://developers.google.com/youtube/player_parameters for supported parameters
+          const outputParams = new URLSearchParams();
+
+          if (urlParams.has('t')) {
+            outputParams.append('start', urlParams.get('t'));
           }
-          purify(id, outputParams);
-        } else if (url.hostname == 'youtu.be') {
-          const id = url.pathname.substring(1);
-          purify(id, outputParams);
+
+          if (url.hostname == 'youtube.com' || url.hostname.endsWith('.youtube.com')) {
+            if (urlParams.has('list')) {
+              outputParams.append('listType', 'playlist');
+              outputParams.append('list', urlParams.get('list'));
+            }
+
+            let id = '';
+            if (urlParams.has('v')) {
+              id = urlParams.get('v');
+            }
+            purify(id, outputParams);
+          } else if (url.hostname == 'youtu.be') {
+            const id = url.pathname.substring(1);
+            purify(id, outputParams);
+          } else {
+            throw "Unknown hostname";
+          }
+        } catch (e) {
+          setTimeout(() => alert("Failed to parse URL. Please make sure the URL is a valid YouTube video or playlist."), 500);
+          // Also show it in the console
+          throw e;
         }
       }
     }
