@@ -1,6 +1,6 @@
 # purify-video.github.io
 
-Watch purified YouTube videos with no ads and comments. Just focus. 
+Watch purified YouTube videos with no ads and comments. Just pure focus. 
 
 
 ## Run with docker:
