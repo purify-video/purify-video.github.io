@@ -1,374 +1,121 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Watch purified YouTube videos with no ads. Just focus." />
-	<meta name="google-site-verification" content="HggK7KBADvrDMO0csH7fA6nbskBG9TepblYhkGOiljE" />
-	<link rel="canonical" href="https://purify.video/">
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
   <title>purify video – watch purified YouTube videos with no ads</title>
+  <meta name="description" content="Watch purified YouTube videos with no ads. Just focus." />
 
-	<script>
-(function () {
-  try {
-    var params = new URLSearchParams(window.location.search);
-    var oldParam = params.get('v');
+  <!-- Keep this so Google Search Console verification stays active. -->
+  <meta name="google-site-verification" content="HggK7KBADvrDMO0csH7fA6nbskBG9TepblYhkGOiljE" />
 
-    // Only redirect old Purify URLs that contain a full YouTube URL.
-    if (!oldParam || !/^https?:\/\//i.test(oldParam)) return;
-
-    var target = 'https://purify.video/?v=' + encodeURIComponent(oldParam);
-    window.location.replace(target);
-  } catch (e) {
-    // Leave the old page working if anything unexpected happens.
-  }
-})();
-</script>
-	
-  <!-- ✅ Google Font: Noto Sans. -->
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet" />
-
-  <!-- ✅ Google Material Icons: Light Mode & Dark Mode. -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-
-  <style>
-    /* ===================
-       Colors palette.
-    ====================== */
-    :root {
-      --bg-light: #f4f4f5;
-      --text-light: #1f1f1f;
-      --bg-dark: #1e1e20;
-      --text-dark: #dcdcdc;
-      --primary: #46aae9;
-      --input-bg: #ffffff;
-      --input-border: #ced4da;
-    }
-
-    /* ===================
-       Themes.
-    ====================== */
-    [data-theme="dark"] {
-      background-color: var(--bg-dark);
-      color: var(--text-dark);
-    }
-
-    [data-theme="light"] {
-      background-color: var(--bg-light);
-      color: var(--text-light);
-    }
-
-    /* ===================
-       Fonts.
-    ====================== */
-    * {
-      box-sizing: border-box;
-      font-family: 'Noto Sans', 'Segoe UI', Helvetica, Arial, sans-serif;
-    }
-
-    body {
-      margin: 0;
-      padding: 0;
-      transition: background-color 0.3s, color 0.3s;
-    }
-
-    /* ===================
-       Layout.
-    ====================== */
-    header, footer, section {
-      max-width: 1200px;
-      margin: auto;
-      padding: 1rem;
-      text-align: center;
-    }
-
-    .iframe {
-      max-width: 100%;
-      aspect-ratio: 16 / 9;
-      padding: 1rem;
-      display: none;
-    }
-
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
-
-    /* ===================
-       Input and buttons.
-    ====================== */
-    input[type="text"] {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 0.25rem;
-      border: 1px solid var(--input-border);
-      background-color: var(--input-bg);
-      color: var(--text-light);
-    }
-
-    button {
-      margin-left: 0.5rem;
-      padding: 0.5rem 1rem;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 0.25rem;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: underline;
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      border-bottom: 1px solid #ccc;
-    }
-
-    /* ===================
-       Responsive.
-    ====================== */
-    @media (max-width: 600px) {
-      input[type="text"], button {
-        display: block;
-        width: 100%;
-        margin: 0.5rem 0;
-      }
-    }
-
-    /* ==========================
-       Toggle switch with icons.
-    ============================= */
-    .theme-toggle {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      display: flex;
-      align-items: center;
-    }
-
-    .icon-label {
-      font-family: 'Material Symbols Outlined', Arial, sans-serif;
-      font-size: 24px;
-      margin: 0 0.5rem;
-      line-height: 1;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-    }
-
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 48px;
-      height: 24px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      border-radius: 24px;
-      transition: 0.4s;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 20px;
-      width: 20px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      border-radius: 50%;
-      transition: 0.4s;
-    }
-
-    input:checked + .slider {
-      background-color: #666;
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(24px);
-    }
-
-    /* Fallback icons. */
-    .fallback-icon {
-      display: none;
-      font-size: 16px;
-    }
-
-    .material-symbols-outlined:empty + .fallback-icon {
-      display: inline;
-    }
-
-    /* ===================
-       Donation box.
-    ====================== */
-    .donation-box {
-      background-color: rgba(255, 255, 255, 0.1);
-      padding: 1rem;
-      margin: 1rem 0;
-      border-radius: 0.5rem;
-    }
-
-    [data-theme="light"] .donation-box {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
-  </style>
+  <!-- Tell Google the new official page is purify.video. -->
+  <link rel="canonical" href="https://purify.video/" />
 
   <script>
-    /**
-     * Set theme based on system.
-     */
-    function setThemeFromPreference() {
-      const saved = localStorage.getItem("theme");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const theme = saved || (prefersDark ? "dark" : "light");
-      document.documentElement.setAttribute("data-theme", theme);
-      document.getElementById("theme-checkbox").checked = theme === "dark";
-    }
+    (function () {
+      var HOME = 'https://purify.video/';
 
-    /**
-     * Change the theme and save on localStorage.
-     */
-    function toggleTheme() {
-      const isDark = document.getElementById("theme-checkbox").checked;
-      const newTheme = isDark ? "dark" : "light";
-      document.documentElement.setAttribute("data-theme", newTheme);
-      localStorage.setItem("theme", newTheme);
-    }
-
-    /**
-		 * Extract key from URL and start video player.
-     */
-    function purify(path, params) {
-      document.querySelector('.iframe').style.display = 'block';
-      document.querySelector('iframe').setAttribute('src', 'https://www.youtube.com/embed/' + path + '?' + params.toString());
-    }
-
-    /**
-     * Autostart on onload event.
-     */
-    function init() {
-      setThemeFromPreference();
-      const params = new URLSearchParams(window.location.search.substring(1));
-      if (params.has('v')) {
-        const url = new URL(params.get('v'));
-        const urlParams = new URLSearchParams(url.search.substring(1));
-        // See https://developers.google.com/youtube/player_parameters for supported parameters
-        const outputParams = new URLSearchParams();
-
-        if (urlParams.has('t')) {
-          outputParams.append('start', urlParams.get('t'));
-        }
-
-        if (url.hostname == 'youtube.com' || url.hostname.endsWith('.youtube.com')) {
-          if (urlParams.has('list')) {
-            outputParams.append('listType', 'playlist');
-            outputParams.append('list', urlParams.get('list'));
-          }
-
-          let id = '';
-          if (urlParams.has('v')) {
-            id = urlParams.get('v');
-          }
-          purify(id, outputParams);
-        } else if (url.hostname == 'youtu.be') {
-          const id = url.pathname.substring(1);
-          purify(id, outputParams);
-        }
+      function isVideoId(value) {
+        return /^[A-Za-z0-9_-]{11}$/.test(value || '');
       }
-    }
 
-    window.onload = init;
+      function isPlaylistId(value) {
+        return /^[A-Za-z0-9_-]{10,}$/.test(value || '');
+      }
+
+      function buildWatchUrl(videoId, listId, startTime) {
+        var params = new URLSearchParams();
+
+        if (isVideoId(videoId)) {
+          params.set('v', videoId);
+        }
+
+        if (isPlaylistId(listId)) {
+          params.set('list', listId);
+        }
+
+        if (startTime) {
+          params.set('t', startTime);
+        }
+
+        return params.toString()
+          ? 'https://purify.video/watch?' + params.toString()
+          : HOME;
+      }
+
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var vParam = params.get('v');
+        var listParam = params.get('list');
+        var tParam = params.get('t');
+
+        /*
+          Old Purify format:
+          ?v=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DVIDEO_ID
+        */
+        if (vParam && /^https?:\/\//i.test(vParam)) {
+          var yt = new URL(vParam);
+          var host = yt.hostname.replace(/^www\./, '').toLowerCase();
+
+          var videoId = yt.searchParams.get('v') || '';
+          var playlistId = yt.searchParams.get('list') || '';
+          var startTime = yt.searchParams.get('t') || yt.searchParams.get('start') || '';
+
+          if (host === 'youtu.be' && !videoId) {
+            videoId = yt.pathname.replace(/^\/+/, '').split('/')[0];
+          }
+
+          if ((host === 'youtube.com' || host.endsWith('.youtube.com')) && yt.pathname.indexOf('/shorts/') === 0) {
+            videoId = yt.pathname.split('/shorts/')[1].split(/[/?#]/)[0];
+          }
+
+          if ((host === 'youtube.com' || host.endsWith('.youtube.com')) && yt.pathname.indexOf('/embed/') === 0) {
+            videoId = yt.pathname.split('/embed/')[1].split(/[/?#]/)[0];
+          }
+
+          window.location.replace(buildWatchUrl(videoId, playlistId, startTime));
+          return;
+        }
+
+        /*
+          Clean-ish old format, just in case:
+          ?v=VIDEO_ID
+        */
+        if (isVideoId(vParam) || isPlaylistId(listParam)) {
+          window.location.replace(buildWatchUrl(vParam, listParam, tParam));
+          return;
+        }
+
+        /*
+          Playlist-only old format:
+          ?list=PLAYLIST_ID
+        */
+        if (isPlaylistId(listParam)) {
+          window.location.replace(buildWatchUrl('', listParam, tParam));
+          return;
+        }
+
+        /*
+          Homepage or anything unknown.
+        */
+        window.location.replace(HOME);
+      } catch (e) {
+        window.location.replace(HOME);
+      }
+    })();
   </script>
+
+  <!-- Fallback for browsers/crawlers that do not run JavaScript immediately. -->
+  <meta http-equiv="refresh" content="1; url=https://purify.video/" />
 </head>
 
 <body>
-  <!-- 🌗 Toggle Switch for Dark/Light mode with fallback icons. -->
-  <div class="theme-toggle">
-    <span class="icon-label">
-      <span class="material-symbols-outlined">light_mode</span>
-      <span class="fallback-icon">☀️</span>
-    </span>
-    <label class="switch">
-      <input type="checkbox" id="theme-checkbox" onchange="toggleTheme()" />
-      <span class="slider"></span>
-    </label>
-    <span class="icon-label">
-      <span class="material-symbols-outlined">dark_mode</span>
-      <span class="fallback-icon">🌙</span>
-    </span>
-  </div>
-
-<header>
-  <h1>purify video</h1>
-  <h2>Watch purified YouTube videos with no ads. Just focus</h2>
-
-  <p style="font-size:0.95rem;opacity:0.85;">
-    Official domain: <a href="https://purify.video/">purify.video</a>
-  </p>
-
-  <form method="get" action="">
-    <input type="text" name="v" placeholder="Enter YouTube URL" />
-    <button type="submit">Purify</button>
-  </form>
-</header>
-	
-  <section class="iframe">
-    
-	  <iframe credentialless frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *; web-share *" sandbox="allow-scripts allow-same-origin allow-presentation" src=""></iframe>
-  </section>
-
-  <section>
-    <h1>Are you looking for a way to enhance your YouTube viewing experience?</h1>
-    <p>This app offers a clean and minimalistic interface for a distraction-free experience.</p>
-    <p>Teachers, students, parents, and organizers can use our app to remove ads, comments, and distracting sidebar videos.</p>
-    <p>Ensure your viewers see only the content you want them to see—nothing more, nothing less.</p>
-  </section>
-
-  <footer>
-
-    <p>YouTube is the source of all content</p>
-    <p><a href="https://github.com/purify-video" target="_blank">Made with 🖤 in Wrocław</a></p>
-    <p>This website <strong>does not store</strong> any data such as cookies to enable essential site functionality.</p>
-  </footer>
-
-<!-- Default Statcounter code for Purify Video
-https://purify-video.github.io -->
-<script type="text/javascript">
-var sc_project=13237369; 
-var sc_invisible=1; 
-var sc_security="0465583a"; 
-</script>
-<script type="text/javascript"
-src="https://www.statcounter.com/counter/counter.js"
-async></script>
-<noscript><div class="statcounter"><a title="Web Analytics"
-href="https://statcounter.com/" target="_blank"><img
-class="statcounter"
-src="https://c.statcounter.com/13237369/0/0465583a/1/"
-alt="Web Analytics"
-referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
-<!-- End of Statcounter Code -->
+  <main style="font-family: Arial, sans-serif; max-width: 720px; margin: 4rem auto; padding: 1rem; text-align: center;">
+    <h1>Purify Video has moved</h1>
+    <p>The official domain is now <a href="https://purify.video/">purify.video</a>.</p>
+    <p>If you are not redirected automatically, <a href="https://purify.video/">continue to Purify Video</a>.</p>
+  </main>
 </body>
 </html>
