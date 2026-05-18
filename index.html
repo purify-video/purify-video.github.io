@@ -9,6 +9,23 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <title>purify video – watch purified YouTube videos with no ads</title>
 
+	<script>
+(function () {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var oldParam = params.get('v');
+
+    // Only redirect old Purify URLs that contain a full YouTube URL.
+    if (!oldParam || !/^https?:\/\//i.test(oldParam)) return;
+
+    var target = 'https://purify.video/?v=' + encodeURIComponent(oldParam);
+    window.location.replace(target);
+  } catch (e) {
+    // Leave the old page working if anything unexpected happens.
+  }
+})();
+</script>
+	
   <!-- ✅ Google Font: Noto Sans. -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet" />
 
