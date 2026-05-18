@@ -243,7 +243,7 @@
      */
     function purify(path, params) {
       document.querySelector('.iframe').style.display = 'block';
-      document.querySelector('iframe').setAttribute('src', 'https://www.youtube-nocookie.com/embed/' + path + '?' + params.toString());
+      document.querySelector('iframe').setAttribute('src', 'https://www.youtube.com/embed/' + path + '?' + params.toString());
     }
 
     /**
@@ -311,7 +311,8 @@
   </header>
 
   <section class="iframe">
-    <iframe src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    
+	  <iframe frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *; web-share *" sandbox="allow-scripts allow-same-origin allow-presentation" src=""></iframe>
   </section>
 
   <section>
