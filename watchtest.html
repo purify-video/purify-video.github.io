@@ -1,223 +1,588 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="referrer" content="origin-when-cross-origin">
-  <title>Styling + proxy test</title>
+  <title>YouTube IFrame API Proxy Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
-    body { margin: 0; padding: 20px; background: #111; color: #eee; font-family: Arial, sans-serif; }
-    .wrap { max-width: 1200px; margin: 0 auto; }
-    h1 { font-size: 20px; }
-    h2 { font-size: 14px; color: #9cf; margin: 12px 0 6px; }
-    .box { background: #1c1c1c; border: 1px solid #333; border-radius: 8px; padding: 12px; margin: 12px 0; }
-    .player-wrap { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
-    iframe { width: 100%; height: 100%; border: 0; }
-    input, select { padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; font-family: monospace; font-size: 12px; }
-    input[type=text] { min-width: 220px; }
-    button { padding: 6px 10px; background: #2a6; border: 0; color: #fff; border-radius: 4px; cursor: pointer; margin: 2px; font-size: 12px; }
-    button:hover { background: #3b7; }
-    button.warn { background: #c63; }
-    button.alt { background: #46aae9; }
-    button.style-btn { background: #555; }
-    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    label { font-size: 12px; }
-    .logs { background: #0a0a0a; border: 1px solid #333; border-radius: 6px; padding: 8px; max-height: 280px; overflow: auto; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
-    .log-info { color: #ccc; }
-    .log-event { color: #9cf; }
-    .log-good { color: #6f6; }
-    .log-bad { color: #f66; }
-    .log-warn { color: #fc6; }
-    .stat { display: inline-block; padding: 2px 8px; background: #2a2a2a; border-radius: 3px; margin-right: 6px; font-size: 11px; }
-    .stat.good { background: #163; }
-    .stat.bad { background: #611; }
-    code { background: #292929; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
-    .note { font-size: 11px; color: #888; margin-top: 4px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 24px;
+      background: #111;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      padding: 10px 13px;
+      font-size: 14px;
+      cursor: pointer;
+      border: 0;
+      border-radius: 6px;
+      background: #ff0000;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    button.secondary {
+      background: #333;
+    }
+
+    button.cool {
+      background: #5b2cff;
+    }
+
+    #playerShell {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+      transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        border-radius 0.25s ease,
+        filter 0.25s ease;
+    }
+
+    #playerMount,
+    #playerMount iframe {
+      width: 100%;
+      height: 100%;
+    }
+
+    #playerMount iframe {
+      display: block;
+      border: 0;
+    }
+
+    #playerShell.rounded {
+      border-radius: 22px;
+      box-shadow: 0 0 35px rgba(255, 0, 0, 0.35);
+    }
+
+    #playerShell.cinema {
+      max-width: 1100px;
+      box-shadow: 0 0 80px rgba(255, 255, 255, 0.18);
+    }
+
+    #playerShell.vivid iframe {
+      filter: contrast(1.2) saturate(1.35) brightness(1.04);
+    }
+
+    #playerShell.dark iframe {
+      filter: brightness(0.65) contrast(1.1);
+    }
+
+    #playerShell.floaty {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      width: 420px;
+      max-width: calc(100vw - 36px);
+      z-index: 999999;
+      border-radius: 14px;
+      box-shadow: 0 0 45px rgba(0, 0, 0, 0.8);
+    }
+
+    #log {
+      margin-top: 16px;
+      max-width: 900px;
+      white-space: pre-wrap;
+      font-size: 14px;
+      line-height: 1.45;
+      color: #ccc;
+      background: #1b1b1b;
+      padding: 12px;
+      border-radius: 8px;
+    }
   </style>
 </head>
+
 <body>
-<div class="wrap">
 
-  <h1>Styling + proxy test</h1>
-  <p class="note">
-    Tests every styling lever we have access to and toggles between YouTube's real widget API and a PHP-proxied one with fingerprinting params stripped.
-  </p>
+  <h1>YouTube IFrame API Proxy Test</h1>
 
-  <div class="box">
-    <h2>Config</h2>
-    <div class="row">
-      <span>Shell:</span>
-      <input id="hostInput" type="text" value="https://purifyvideo.com">
-      <span>Video:</span>
-      <input id="videoInput" type="text" value="dQw4w9WgXcQ" style="min-width: 130px;">
-      <label><input type="checkbox" id="useProxy"> Use PHP-proxied widget API</label>
-      <label><input type="checkbox" id="hideControls"> controls=0</label>
-      <button onclick="load()">Load</button>
-    </div>
-    <p class="note">"Use PHP-proxied widget API" loads <code>/widgetapi-proxy.php</code> on the shell domain instead of YouTube's direct script.</p>
+  <div class="buttons">
+    <button id="buildPlayerBtn">Build Player</button>
+    <button id="destroyBtn" class="secondary">Destroy</button>
   </div>
 
-  <div class="box">
-    <h2>Status</h2>
-    <span class="stat" id="stat-ready">ready: -</span>
-    <span class="stat" id="stat-state">state: -</span>
-    <span class="stat" id="stat-ads">ads detected: 0</span>
+  <div class="buttons">
+    <button id="durationBtn">Get Duration</button>
+    <button id="iframeBtn">Get Iframe ID</button>
+    <button id="videoDataBtn">Get Title + Author</button>
+    <button id="srcBtn">Show Iframe Src</button>
   </div>
 
-  <div class="box">
-    <div class="player-wrap">
-      <iframe id="shellFrame"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *"
-              referrerpolicy="origin-when-cross-origin"
-              allowfullscreen></iframe>
-    </div>
+  <div class="buttons">
+    <button id="playBtn" class="secondary">Play</button>
+    <button id="pauseBtn" class="secondary">Pause</button>
+    <button id="muteBtn" class="secondary">Mute</button>
+    <button id="unmuteBtn" class="secondary">Unmute</button>
+    <button id="seekBtn" class="secondary">Seek +30s</button>
+    <button id="volumeBtn" class="secondary">Volume 50%</button>
   </div>
 
-  <div class="box">
-    <h2>Player controls</h2>
-    <div class="row">
-      <button onclick="cmd('play')">play</button>
-      <button onclick="cmd('pause')">pause</button>
-      <button onclick="cmd('mute')">mute</button>
-      <button onclick="cmd('unMute')">unmute</button>
-      <button onclick="cmd('seekTo', {seconds: 30, allowSeekAhead: true})">seek 30s</button>
+  <div class="buttons">
+    <button id="roundedBtn" class="cool">Rounded Glow</button>
+    <button id="cinemaBtn" class="cool">Cinema Mode</button>
+    <button id="vividBtn" class="cool">Vivid Filter</button>
+    <button id="darkBtn" class="cool">Dark Filter</button>
+    <button id="floatBtn" class="cool">Floating Mini</button>
+    <button id="resetStyleBtn" class="cool">Reset Style</button>
+  </div>
+
+  <div class="buttons">
+    <button id="fullscreenBtn">Fullscreen Iframe</button>
+    <button id="docPipBtn">Document PiP</button>
+    <button id="allowBtn">Set Iframe Permissions</button>
+  </div>
+
+  <div id="playerShell">
+    <div id="playerMount">
+      <div id="playerTarget"></div>
     </div>
   </div>
 
-  <div class="box">
-    <h2>Styling experiments — what we CAN do</h2>
-    <p class="note">These work because they're applied OUTSIDE the YouTube iframe or via CSS filter on the iframe element itself.</p>
+  <div id="log">Waiting...</div>
 
-    <div class="row">
-      <strong style="font-size:11px;margin-right:8px;">CSS filter on iframe:</strong>
-      <button class="style-btn" onclick="cmd('applyStyle', {style: null})">none</button>
-      <button class="style-btn" onclick="cmd('applyStyle', {style: 'tint-warm'})">warm tint</button>
-      <button class="style-btn" onclick="cmd('applyStyle', {style: 'tint-cool'})">cool tint</button>
-      <button class="style-btn" onclick="cmd('applyStyle', {style: 'dim'})">dim</button>
-      <button class="style-btn" onclick="cmd('applyStyle', {style: 'vivid'})">vivid</button>
-    </div>
+  <script>
+    var API_URL = "https://purifyvideo.com/widgetapi-proxy.php?origin=https%3A%2F%2Fpurifyvideo.com";
 
-    <div class="row" style="margin-top:8px;">
-      <strong style="font-size:11px;margin-right:8px;">Overlays:</strong>
-      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayTop', show: true})">top bar ON</button>
-      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayTop', show: false})">top bar OFF</button>
-      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayBottom', show: true})">bottom bar ON</button>
-      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayBottom', show: false})">bottom bar OFF</button>
-    </div>
+    var player = null;
+    var youtubeApiReady = false;
+    var pendingBuild = false;
 
-    <div class="row" style="margin-top:8px;">
-      <strong style="font-size:11px;margin-right:8px;">Ad cover:</strong>
-      <button class="style-btn" onclick="cmd('setAdCover', {show: true})">show ad cover</button>
-      <button class="style-btn" onclick="cmd('setAdCover', {show: false})">hide ad cover</button>
-    </div>
-  </div>
+    var testVideoId = "M7lc1UVf-VE";
 
-  <div class="box">
-    <h2>What we CANNOT do</h2>
-    <p class="note">
-      These would require injecting CSS into <code>youtube-nocookie.com</code>'s iframe, which is blocked by the browser's same-origin policy. No amount of PHP proxying or postMessage gymnastics gets around this:
-    </p>
-    <ul style="font-size:12px; color:#bbb; margin: 4px 0;">
-      <li>Hide the YouTube logo in the player chrome</li>
-      <li>Change the colour of the progress bar</li>
-      <li>Hide individual buttons (share, watch later, etc.) on the player</li>
-      <li>Change the player's font, button shape, or layout</li>
-      <li>Style the "Watch on YouTube" link on pause</li>
-      <li>Modify the related videos panel that appears on end</li>
-    </ul>
-    <p class="note">
-      The only way to fully restyle the player is to extract the raw video stream and play it in your own HTML5 &lt;video&gt; element with a player like Plyr or Video.js.
-    </p>
-  </div>
+    var logEl = document.getElementById("log");
+    var playerShell = document.getElementById("playerShell");
+    var playerMount = document.getElementById("playerMount");
 
-  <div class="box">
-    <h2>Log</h2>
-    <div id="log" class="logs"></div>
-  </div>
+    var pipWindow = null;
+    var pipPlaceholder = null;
 
-</div>
-
-<script>
-  var shellOrigin = '';
-  var nextRequestId = 1;
-  var adCount = 0;
-
-  function log(msg, cls) {
-    var el = document.getElementById('log');
-    var div = document.createElement('div');
-    div.className = 'log-' + (cls || 'info');
-    div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-    el.appendChild(div);
-    el.scrollTop = el.scrollHeight;
-  }
-
-  function setStat(id, val, good) {
-    var el = document.getElementById('stat-' + id);
-    el.textContent = id + ': ' + val;
-    el.className = 'stat ' + (good === true ? 'good' : (good === false ? 'bad' : ''));
-  }
-
-  function load() {
-    var host = document.getElementById('hostInput').value.trim();
-    var videoId = document.getElementById('videoInput').value.trim();
-    var useProxy = document.getElementById('useProxy').checked;
-    var hideControls = document.getElementById('hideControls').checked;
-
-    if (!host || !videoId) return;
-    shellOrigin = host;
-    adCount = 0;
-    setStat('ready', 'loading');
-    setStat('state', '-');
-    setStat('ads', '0');
-
-    var params = new URLSearchParams();
-    params.set('parentOrigin', window.location.origin);
-    params.set('playsinline', '1');
-    params.set('rel', '0');
-    if (useProxy) params.set('proxyApi', '1');
-    if (hideControls) params.set('controls', '0');
-
-    var src = host + '/embed/' + encodeURIComponent(videoId) + '?' + params.toString();
-    log('Loading: ' + src);
-    document.getElementById('shellFrame').src = src;
-  }
-
-  function cmd(action, extra) {
-    var iframe = document.getElementById('shellFrame');
-    if (!iframe.contentWindow) { log('iframe not ready', 'bad'); return; }
-    var msg = Object.assign({ action: action }, extra || {});
-    iframe.contentWindow.postMessage(msg, shellOrigin || '*');
-    log('→ ' + action + (extra ? ' ' + JSON.stringify(extra) : ''), 'info');
-  }
-
-  function stateName(s) {
-    return {0:'ENDED',1:'PLAYING',2:'PAUSED',3:'BUFFERING',5:'CUED','-1':'UNSTARTED'}[s] || s;
-  }
-
-  window.addEventListener('message', function (event) {
-    if (shellOrigin && event.origin !== shellOrigin) return;
-    if (!event.data || typeof event.data !== 'object') return;
-
-    var data = event.data;
-
-    if (data.event === 'ready') {
-      log('← ready', 'good');
-      setStat('ready', 'YES', true);
-    } else if (data.event === 'stateChange') {
-      log('← state: ' + stateName(data.state), 'event');
-      setStat('state', stateName(data.state), true);
-    } else if (data.event === 'adDetected') {
-      adCount++;
-      setStat('ads', adCount, false);
-      log('← AD DETECTED: ' + data.actualId, 'warn');
-    } else if (data.event === 'error') {
-      log('← error: ' + (data.code || data.message), 'bad');
-    } else if (data.event === 'response') {
-      log('← ' + data.property + ' = ' + JSON.stringify(data.value), 'good');
-    } else {
-      log('← ' + JSON.stringify(data), 'info');
+    function log(msg) {
+      logEl.textContent = msg;
+      console.log(msg);
     }
-  });
-</script>
+
+    function appendLog(msg) {
+      logEl.textContent += "\n" + msg;
+      console.log(msg);
+    }
+
+    function ensurePlayerTarget() {
+      playerMount.innerHTML = '<div id="playerTarget"></div>';
+    }
+
+    function getPlayerOrWarn() {
+      if (!player || typeof player.getIframe !== "function") {
+        log("Player is not built yet.");
+        return null;
+      }
+      return player;
+    }
+
+    function getIframeOrWarn() {
+      var p = getPlayerOrWarn();
+      if (!p) return null;
+
+      try {
+        return p.getIframe();
+      } catch (e) {
+        log("Could not get iframe: " + e.message);
+        return null;
+      }
+    }
+
+    function setUsefulIframePermissions() {
+      var iframe = getIframeOrWarn();
+      if (!iframe) return;
+
+      iframe.setAttribute(
+        "allow",
+        [
+          "accelerometer",
+          "autoplay",
+          "clipboard-write",
+          "encrypted-media",
+          "gyroscope",
+          "picture-in-picture",
+          "web-share",
+          "fullscreen"
+        ].join("; ")
+      );
+
+      iframe.setAttribute("allowfullscreen", "1");
+      iframe.setAttribute("playsinline", "1");
+
+      log("Iframe permissions set:\n" + iframe.getAttribute("allow"));
+    }
+
+    function loadYouTubeIframeApi() {
+      if (window.YT && window.YT.Player) {
+        youtubeApiReady = true;
+        return;
+      }
+
+      if (document.getElementById("youtube-iframe-api")) {
+        return;
+      }
+
+      var tag = document.createElement("script");
+      tag.id = "youtube-iframe-api";
+      tag.src = API_URL;
+      tag.async = true;
+
+      var firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      log("Loading YouTube IFrame API from proxy...");
+    }
+
+    window.onYouTubeIframeAPIReady = function () {
+      youtubeApiReady = true;
+      log("YouTube IFrame API ready.");
+
+      if (pendingBuild) {
+        buildPlayer();
+      }
+    };
+
+    function buildPlayer() {
+      pendingBuild = false;
+
+      if (!youtubeApiReady || !window.YT || !window.YT.Player) {
+        pendingBuild = true;
+        loadYouTubeIframeApi();
+        return;
+      }
+
+      if (player && typeof player.destroy === "function") {
+        try {
+          player.destroy();
+        } catch (e) {}
+        player = null;
+      }
+
+      ensurePlayerTarget();
+
+      log("Building player...");
+
+      player = new YT.Player("playerTarget", {
+        width: "100%",
+        height: "100%",
+        videoId: testVideoId,
+
+        /*
+          For production, origin is the normal/safe route.
+          Do not try to bypass YouTube's origin/security logic.
+        */
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          disablekb: 0,
+          fs: 1,
+          playsinline: 1,
+          rel: 0,
+          modestbranding: 1,
+          iv_load_policy: 3,
+          origin: window.location.origin
+        },
+
+        events: {
+          onReady: function (event) {
+            log("Player ready. Attempting playback...");
+
+            setUsefulIframePermissions();
+
+            try {
+              event.target.playVideo();
+            } catch (e) {
+              appendLog("playVideo failed: " + e.message);
+            }
+          },
+
+          onStateChange: function (event) {
+            var stateName = "UNKNOWN";
+
+            if (event.data === YT.PlayerState.UNSTARTED) stateName = "UNSTARTED";
+            if (event.data === YT.PlayerState.ENDED) stateName = "ENDED";
+            if (event.data === YT.PlayerState.PLAYING) stateName = "PLAYING";
+            if (event.data === YT.PlayerState.PAUSED) stateName = "PAUSED";
+            if (event.data === YT.PlayerState.BUFFERING) stateName = "BUFFERING";
+            if (event.data === YT.PlayerState.CUED) stateName = "CUED";
+
+            log("Player state: " + stateName);
+          },
+
+          onPlaybackQualityChange: function (event) {
+            log("Playback quality changed: " + event.data);
+          },
+
+          onPlaybackRateChange: function (event) {
+            log("Playback rate changed: " + event.data);
+          },
+
+          onError: function (event) {
+            log("YouTube player error: " + event.data);
+          }
+        }
+      });
+    }
+
+    function destroyPlayer() {
+      if (player && typeof player.destroy === "function") {
+        player.destroy();
+        player = null;
+      }
+
+      ensurePlayerTarget();
+      log("Player destroyed.");
+    }
+
+    function getDuration() {
+      var p = getPlayerOrWarn();
+      if (!p) return;
+
+      var duration = p.getDuration();
+      log("Duration: " + duration + " seconds");
+    }
+
+    function getIframeDetails() {
+      var iframe = getIframeOrWarn();
+      if (!iframe) return;
+
+      log(
+        "Iframe details:" +
+        "\nID: " + iframe.id +
+        "\nTag: " + iframe.tagName +
+        "\nWidth: " + iframe.width +
+        "\nHeight: " + iframe.height +
+        "\nAllow: " + iframe.getAttribute("allow")
+      );
+    }
+
+    function getVideoData() {
+      var p = getPlayerOrWarn();
+      if (!p) return;
+
+      var data = p.getVideoData ? p.getVideoData() : {};
+
+      log(
+        "Video data:" +
+        "\nTitle: " + (data.title || "(empty)") +
+        "\nAuthor: " + (data.author || "(empty)") +
+        "\nVideo ID: " + (data.video_id || "(empty)")
+      );
+    }
+
+    function showIframeSrc() {
+      var iframe = getIframeOrWarn();
+      if (!iframe) return;
+
+      log("Iframe src:\n" + iframe.src);
+    }
+
+    function playVideo() {
+      var p = getPlayerOrWarn();
+      if (p) p.playVideo();
+    }
+
+    function pauseVideo() {
+      var p = getPlayerOrWarn();
+      if (p) p.pauseVideo();
+    }
+
+    function muteVideo() {
+      var p = getPlayerOrWarn();
+      if (p) {
+        p.mute();
+        log("Muted.");
+      }
+    }
+
+    function unmuteVideo() {
+      var p = getPlayerOrWarn();
+      if (p) {
+        p.unMute();
+        log("Unmuted.");
+      }
+    }
+
+    function seekForward() {
+      var p = getPlayerOrWarn();
+      if (!p) return;
+
+      var now = p.getCurrentTime();
+      p.seekTo(now + 30, true);
+      log("Seeked to: " + Math.round(now + 30) + " seconds");
+    }
+
+    function setVolumeHalf() {
+      var p = getPlayerOrWarn();
+      if (!p) return;
+
+      p.setVolume(50);
+      log("Volume set to 50%.");
+    }
+
+    function toggleClass(className) {
+      playerShell.classList.toggle(className);
+      log("Toggled style: " + className);
+    }
+
+    function resetStyles() {
+      playerShell.className = "";
+      log("Styles reset.");
+    }
+
+    async function fullscreenIframe() {
+      var iframe = getIframeOrWarn();
+      if (!iframe) return;
+
+      try {
+        if (iframe.requestFullscreen) {
+          await iframe.requestFullscreen();
+          log("Requested fullscreen on iframe.");
+        } else if (iframe.webkitRequestFullscreen) {
+          iframe.webkitRequestFullscreen();
+          log("Requested webkit fullscreen on iframe.");
+        } else {
+          log("Fullscreen API not supported here.");
+        }
+      } catch (e) {
+        log("Fullscreen failed: " + e.message);
+      }
+    }
+
+    async function openDocumentPip() {
+      var iframe = getIframeOrWarn();
+      if (!iframe) return;
+
+      /*
+        This is not native video PiP.
+        It uses Chrome's Document Picture-in-Picture API, where available,
+        and moves the whole iframe into a small always-on-top window.
+      */
+      if (!window.documentPictureInPicture ||
+          typeof window.documentPictureInPicture.requestWindow !== "function") {
+        log("Document Picture-in-Picture is not supported in this browser.");
+        return;
+      }
+
+      if (pipWindow && !pipWindow.closed) {
+        pipWindow.focus();
+        log("Document PiP window already open.");
+        return;
+      }
+
+      try {
+        pipPlaceholder = document.createComment("youtube iframe placeholder");
+        iframe.parentNode.insertBefore(pipPlaceholder, iframe);
+
+        pipWindow = await window.documentPictureInPicture.requestWindow({
+          width: 520,
+          height: 320
+        });
+
+        pipWindow.document.body.style.margin = "0";
+        pipWindow.document.body.style.background = "#000";
+        pipWindow.document.body.style.overflow = "hidden";
+
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.display = "block";
+        iframe.style.border = "0";
+
+        pipWindow.document.body.appendChild(iframe);
+
+        pipWindow.addEventListener("pagehide", function () {
+          try {
+            if (pipPlaceholder && pipPlaceholder.parentNode) {
+              pipPlaceholder.parentNode.replaceChild(iframe, pipPlaceholder);
+            } else {
+              playerMount.appendChild(iframe);
+            }
+
+            iframe.style.width = "100%";
+            iframe.style.height = "100%";
+            iframe.style.display = "block";
+            iframe.style.border = "0";
+
+            pipWindow = null;
+            pipPlaceholder = null;
+            log("Document PiP closed. Iframe restored.");
+          } catch (e) {
+            console.warn(e);
+          }
+        });
+
+        log("Document PiP opened.");
+      } catch (e) {
+        log("Document PiP failed: " + e.message);
+      }
+    }
+
+    document.getElementById("buildPlayerBtn").addEventListener("click", buildPlayer);
+    document.getElementById("destroyBtn").addEventListener("click", destroyPlayer);
+
+    document.getElementById("durationBtn").addEventListener("click", getDuration);
+    document.getElementById("iframeBtn").addEventListener("click", getIframeDetails);
+    document.getElementById("videoDataBtn").addEventListener("click", getVideoData);
+    document.getElementById("srcBtn").addEventListener("click", showIframeSrc);
+
+    document.getElementById("playBtn").addEventListener("click", playVideo);
+    document.getElementById("pauseBtn").addEventListener("click", pauseVideo);
+    document.getElementById("muteBtn").addEventListener("click", muteVideo);
+    document.getElementById("unmuteBtn").addEventListener("click", unmuteVideo);
+    document.getElementById("seekBtn").addEventListener("click", seekForward);
+    document.getElementById("volumeBtn").addEventListener("click", setVolumeHalf);
+
+    document.getElementById("roundedBtn").addEventListener("click", function () {
+      toggleClass("rounded");
+    });
+
+    document.getElementById("cinemaBtn").addEventListener("click", function () {
+      toggleClass("cinema");
+    });
+
+    document.getElementById("vividBtn").addEventListener("click", function () {
+      playerShell.classList.remove("dark");
+      toggleClass("vivid");
+    });
+
+    document.getElementById("darkBtn").addEventListener("click", function () {
+      playerShell.classList.remove("vivid");
+      toggleClass("dark");
+    });
+
+    document.getElementById("floatBtn").addEventListener("click", function () {
+      toggleClass("floaty");
+    });
+
+    document.getElementById("resetStyleBtn").addEventListener("click", resetStyles);
+
+    document.getElementById("fullscreenBtn").addEventListener("click", fullscreenIframe);
+    document.getElementById("docPipBtn").addEventListener("click", openDocumentPip);
+    document.getElementById("allowBtn").addEventListener("click", setUsefulIframePermissions);
+  </script>
+
 </body>
 </html>
