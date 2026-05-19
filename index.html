@@ -550,17 +550,17 @@
 
       if (parsed.videoId && parsed.playlistId) {
         params.set('list', parsed.playlistId);
-        return 'https://www.youtube.com/embed/' + encodeURIComponent(parsed.videoId) + '?' + params.toString();
+        return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?' + params.toString();
       }
 
       if (parsed.videoId) {
-        return 'https://www.youtube.com/embed/' + encodeURIComponent(parsed.videoId) + '?' + params.toString();
+        return 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?' + params.toString();
       }
 
       if (parsed.playlistId) {
         params.set('listType', 'playlist');
         params.set('list', parsed.playlistId);
-        return 'https://www.youtube.com/embed/videoseries?' + params.toString();
+        return 'https://www.youtube-nocookie.com/embed/videoseries?' + params.toString();
       }
 
       return null;
