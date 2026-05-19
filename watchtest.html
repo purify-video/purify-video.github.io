@@ -1,30 +1,428 @@
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Watch</title>
-
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-99VF2EXKRN"></script>
-
-  <script>
-    const params = new URLSearchParams(window.location.search);
-    const v = params.get('v') || '';
-
-    if (/^[a-zA-Z0-9_-]{11}$/.test(v)) {
-      document.title = v;
-
-      window.location.replace(
-        'https://www.youtube-nocookie.com/embed/' +
-        encodeURIComponent(v) +
-        '?playlist=' +
-        encodeURIComponent(v) +
-        '&autoplay=1&iv_load_policy=3&loop=1&start='
-      );
-    } else {
-      document.body.textContent = 'Invalid or missing video ID';
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="origin-when-cross-origin">
+  <title>YT IFrame API host-rotation test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #111;
+      color: #eee;
+      font-family: Arial, sans-serif;
     }
-  </script>
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    h2 { font-size: 16px; margin: 16px 0 8px; }
+    .box {
+      background: #1c1c1c;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 12px;
+      margin: 12px 0;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .player-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    input[type=text] {
+      flex: 1;
+      min-width: 280px;
+      padding: 8px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-family: monospace;
+    }
+    button {
+      padding: 8px 12px;
+      background: #2a6;
+      border: 0;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover { background: #3b7; }
+    button.alt { background: #46aae9; }
+    button.alt:hover { background: #57bbf0; }
+    button.warn { background: #c63; }
+    code {
+      background: #292929;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 13px;
+    }
+    #log {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px;
+      max-height: 400px;
+      overflow: auto;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .pass { color: #6f6; }
+    .fail { color: #f66; }
+    .info { color: #9cf; }
+    .warn-text { color: #fc6; }
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .results-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .results-table td:first-child {
+      font-family: monospace;
+      color: #9cf;
+      width: 220px;
+    }
+    .small { color: #999; font-size: 12px; }
+  </style>
 </head>
 <body>
+<div class="wrap">
+
+  <h1>YouTube IFrame API — host-rotation test</h1>
+  <p class="small">
+    Verifies that <code>YT.Player</code> with the undocumented <code>host</code> parameter still surfaces every API method and event when the iframe is proxied through a shell domain.
+  </p>
+
+  <div class="box">
+    <div class="row">
+      <span>Shell host URL:</span>
+      <input id="hostInput" type="text" value="https://purifyvideo.com">
+      <span>Video ID:</span>
+      <input id="videoInput" type="text" value="dQw4w9WgXcQ" style="min-width: 140px;">
+    </div>
+    <p class="small">
+      Set the shell host to wherever you deployed <code>shell.html</code> (rename it to <code>embed/index.html</code> on that host, or configure routing so <code>/embed/VIDEOID</code> serves the shell). Then click Initialize.
+    </p>
+    <div class="row" style="margin-top: 8px;">
+      <button onclick="initPlayer()">Initialize player</button>
+      <button class="alt" onclick="runAllTests()">Run all API tests</button>
+      <button class="warn" onclick="destroyPlayer()">Destroy</button>
+      <button onclick="clearLog()">Clear log</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="player-wrap" id="playerHolder">
+      <div id="player"></div>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Manual API exercises</h2>
+    <div class="row">
+      <button onclick="testCall('playVideo')">play</button>
+      <button onclick="testCall('pauseVideo')">pause</button>
+      <button onclick="testCall('stopVideo')">stop</button>
+      <button onclick="testCall('mute')">mute</button>
+      <button onclick="testCall('unMute')">unMute</button>
+      <button onclick="testCall('seekTo', 30, true)">seekTo(30)</button>
+      <button onclick="testCall('setVolume', 50)">setVolume(50)</button>
+      <button onclick="testGetter('getCurrentTime')">getCurrentTime</button>
+      <button onclick="testGetter('getDuration')">getDuration</button>
+      <button onclick="testGetter('getPlayerState')">getPlayerState</button>
+      <button onclick="testGetter('getVideoData')">getVideoData</button>
+      <button onclick="testGetter('getVideoUrl')">getVideoUrl</button>
+      <button onclick="testGetter('getVideoLoadedFraction')">getVideoLoadedFraction</button>
+      <button onclick="testGetter('getPlaybackRate')">getPlaybackRate</button>
+      <button onclick="testGetter('isMuted')">isMuted</button>
+      <button onclick="testGetter('getVolume')">getVolume</button>
+      <button onclick="testGetIframe()">getIframe()</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Test results</h2>
+    <table class="results-table" id="resultsTable"><tbody></tbody></table>
+  </div>
+
+  <div class="box">
+    <h2>Event log</h2>
+    <div id="log"></div>
+  </div>
+
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+  var player = null;
+  var ytReady = false;
+  var results = {};
+  var eventsFired = {
+    onReady: false,
+    onStateChange: false,
+    onPlaybackQualityChange: false,
+    onPlaybackRateChange: false,
+    onError: false,
+    onApiChange: false
+  };
+
+  function log(msg, cls) {
+    var div = document.createElement('div');
+    div.className = cls || '';
+    var t = new Date().toLocaleTimeString();
+    div.textContent = '[' + t + '] ' + msg;
+    var el = document.getElementById('log');
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function clearLog() {
+    document.getElementById('log').innerHTML = '';
+    document.querySelector('#resultsTable tbody').innerHTML = '';
+    results = {};
+  }
+
+  function recordResult(name, passed, detail) {
+    results[name] = { passed: passed, detail: detail };
+    renderResults();
+  }
+
+  function renderResults() {
+    var tbody = document.querySelector('#resultsTable tbody');
+    tbody.innerHTML = '';
+    Object.keys(results).forEach(function (key) {
+      var r = results[key];
+      var tr = document.createElement('tr');
+      var status = r.passed ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>';
+      var detail = r.detail !== undefined ? ' — ' + r.detail : '';
+      tr.innerHTML = '<td>' + key + '</td><td>' + status + detail + '</td>';
+      tbody.appendChild(tr);
+    });
+  }
+
+  function onYouTubeIframeAPIReady() {
+    ytReady = true;
+    log('YT IFrame API loaded', 'info');
+  }
+
+  function initPlayer() {
+    if (!ytReady) {
+      log('YT API not ready yet — wait a moment and try again', 'warn-text');
+      return;
+    }
+
+    destroyPlayer();
+
+    var host = document.getElementById('hostInput').value.trim();
+    var videoId = document.getElementById('videoInput').value.trim();
+
+    if (!host || !videoId) {
+      log('Both host and videoId are required', 'fail');
+      return;
+    }
+
+    log('Creating YT.Player with host=' + host + ' videoId=' + videoId, 'info');
+
+    // Reset event-fired tracking
+    Object.keys(eventsFired).forEach(function (k) { eventsFired[k] = false; });
+
+    try {
+      player = new YT.Player('player', {
+        host: host,
+        width: '100%',
+        height: '100%',
+        videoId: videoId,
+        playerVars: {
+          playsinline: 1,
+          rel: 0,
+          enablejsapi: 1
+        },
+        events: {
+          onReady: function (e) {
+            eventsFired.onReady = true;
+            recordResult('event: onReady', true, 'fired');
+            log('onReady fired', 'pass');
+            // Inspect the iframe the API created
+            var iframe = e.target.getIframe();
+            log('iframe.src = ' + iframe.src, 'info');
+            var srcHostMatch = iframe.src.indexOf(host) === 0;
+            recordResult('iframe.src points at shell host', srcHostMatch,
+              srcHostMatch ? 'correct' : 'WRONG: ' + iframe.src);
+          },
+          onStateChange: function (e) {
+            eventsFired.onStateChange = true;
+            var name = stateName(e.data);
+            log('onStateChange: ' + name + ' (' + e.data + ')', 'pass');
+            if (!results['event: onStateChange']) {
+              recordResult('event: onStateChange', true, 'fired with state=' + name);
+            }
+          },
+          onPlaybackQualityChange: function (e) {
+            eventsFired.onPlaybackQualityChange = true;
+            log('onPlaybackQualityChange: ' + e.data, 'pass');
+            recordResult('event: onPlaybackQualityChange', true, 'quality=' + e.data);
+          },
+          onPlaybackRateChange: function (e) {
+            eventsFired.onPlaybackRateChange = true;
+            log('onPlaybackRateChange: ' + e.data, 'pass');
+            recordResult('event: onPlaybackRateChange', true, 'rate=' + e.data);
+          },
+          onError: function (e) {
+            eventsFired.onError = true;
+            log('onError: code=' + e.data, 'fail');
+            recordResult('event: onError', false, 'code=' + e.data + ' (' + errorMeaning(e.data) + ')');
+          },
+          onApiChange: function () {
+            eventsFired.onApiChange = true;
+            log('onApiChange fired', 'pass');
+            recordResult('event: onApiChange', true, 'fired');
+          }
+        }
+      });
+      log('YT.Player constructor returned without throwing', 'pass');
+      recordResult('YT.Player construction', true, 'no exception');
+    } catch (err) {
+      log('YT.Player constructor threw: ' + err.message, 'fail');
+      recordResult('YT.Player construction', false, err.message);
+    }
+  }
+
+  function destroyPlayer() {
+    if (player && typeof player.destroy === 'function') {
+      try { player.destroy(); } catch (e) {}
+      log('Player destroyed', 'info');
+    }
+    player = null;
+    document.getElementById('playerHolder').innerHTML = '<div id="player"></div>';
+  }
+
+  function stateName(state) {
+    if (!window.YT || !YT.PlayerState) return String(state);
+    var map = {};
+    map[YT.PlayerState.UNSTARTED] = 'UNSTARTED';
+    map[YT.PlayerState.ENDED] = 'ENDED';
+    map[YT.PlayerState.PLAYING] = 'PLAYING';
+    map[YT.PlayerState.PAUSED] = 'PAUSED';
+    map[YT.PlayerState.BUFFERING] = 'BUFFERING';
+    map[YT.PlayerState.CUED] = 'CUED';
+    return map[state] || String(state);
+  }
+
+  function errorMeaning(code) {
+    var map = {
+      2: 'invalid parameter',
+      5: 'HTML5 player issue',
+      100: 'video not found',
+      101: 'embedding disabled',
+      150: 'embedding disabled',
+      153: 'referrer/origin rejected'
+    };
+    return map[code] || 'unknown';
+  }
+
+  function testCall(method) {
+    if (!player) { log('No player', 'fail'); return; }
+    var args = Array.prototype.slice.call(arguments, 1);
+    try {
+      var result = player[method].apply(player, args);
+      log('call ' + method + '(' + args.join(', ') + ') OK', 'pass');
+      recordResult('method: ' + method, true,
+        result !== undefined ? 'returned ' + JSON.stringify(result).slice(0, 60) : 'void');
+    } catch (err) {
+      log('call ' + method + ' threw: ' + err.message, 'fail');
+      recordResult('method: ' + method, false, err.message);
+    }
+  }
+
+  function testGetter(method) {
+    if (!player) { log('No player', 'fail'); return; }
+    try {
+      var result = player[method]();
+      var display = typeof result === 'object'
+        ? JSON.stringify(result).slice(0, 100)
+        : String(result);
+      log(method + '() = ' + display, 'info');
+      recordResult('getter: ' + method, true, display);
+    } catch (err) {
+      log(method + '() threw: ' + err.message, 'fail');
+      recordResult('getter: ' + method, false, err.message);
+    }
+  }
+
+  function testGetIframe() {
+    if (!player) { log('No player', 'fail'); return; }
+    try {
+      var iframe = player.getIframe();
+      var ok = iframe && iframe.tagName === 'IFRAME';
+      var info = 'tag=' + (iframe ? iframe.tagName : 'null') +
+        ', src=' + (iframe ? iframe.src.slice(0, 80) : 'null');
+      log('getIframe(): ' + info, ok ? 'pass' : 'fail');
+      recordResult('getter: getIframe', ok, info);
+    } catch (err) {
+      log('getIframe threw: ' + err.message, 'fail');
+      recordResult('getter: getIframe', false, err.message);
+    }
+  }
+
+  function runAllTests() {
+    if (!player) {
+      log('Initialize player first', 'warn-text');
+      return;
+    }
+    log('=== Running automated test suite ===', 'info');
+
+    // Wait for player to be ready before testing.
+    function nextWhenReady(fn) {
+      if (eventsFired.onReady) { fn(); return; }
+      log('Waiting for onReady...', 'info');
+      var attempts = 0;
+      var iv = setInterval(function () {
+        attempts++;
+        if (eventsFired.onReady) { clearInterval(iv); fn(); }
+        if (attempts > 50) { clearInterval(iv); log('onReady never fired — aborting', 'fail'); }
+      }, 200);
+    }
+
+    nextWhenReady(function () {
+      // Test all getters first (synchronous, safe).
+      var getters = [
+        'getDuration', 'getCurrentTime', 'getPlayerState',
+        'getVideoData', 'getVideoUrl', 'getVideoEmbedCode',
+        'getVideoLoadedFraction', 'getPlaybackRate',
+        'getAvailablePlaybackRates', 'getVolume', 'isMuted',
+        'getAvailableQualityLevels', 'getPlaybackQuality'
+      ];
+      getters.forEach(testGetter);
+      testGetIframe();
+
+      // Test playback methods (these will trigger state-change events).
+      setTimeout(function () { testCall('playVideo'); }, 200);
+      setTimeout(function () { testCall('pauseVideo'); }, 1500);
+      setTimeout(function () { testCall('seekTo', 10, true); }, 2500);
+      setTimeout(function () { testCall('mute'); }, 3500);
+      setTimeout(function () { testCall('unMute'); }, 4500);
+      setTimeout(function () { testCall('setVolume', 30); }, 5500);
+      setTimeout(function () { testCall('setPlaybackRate', 1.5); }, 6500);
+      setTimeout(function () { testCall('setPlaybackRate', 1); }, 7500);
+
+      setTimeout(function () {
+        log('=== Test suite complete ===', 'info');
+        log('Events fired during test:', 'info');
+        Object.keys(eventsFired).forEach(function (k) {
+          log('  ' + k + ': ' + (eventsFired[k] ? 'YES' : 'NO'),
+            eventsFired[k] ? 'pass' : 'warn-text');
+        });
+      }, 9000);
+    });
+  }
+</script>
 </body>
 </html>
