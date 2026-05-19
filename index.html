@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Watch purified YouTube videos with no ads. Just focus." />
-	<meta name="google-site-verification" content="HggK7KBADvrDMO0csH7fA6nbskBG9TepblYhkGOiljE" />
-	<link rel="canonical" href="https://purify.video/">
+  <meta name="google-site-verification" content="HggK7KBADvrDMO0csH7fA6nbskBG9TepblYhkGOiljE" />
+  <link rel="canonical" href="https://purify.video/">
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <title>purify video – watch purified YouTube videos with no ads</title>
 
@@ -111,6 +111,17 @@
       font-size: 2rem;
       margin-bottom: 0.5rem;
       border-bottom: 1px solid #ccc;
+    }
+
+    .official-domain-note {
+      font-size: 0.95rem;
+      opacity: 0.85;
+    }
+
+    .form-note {
+      font-size: 0.85rem;
+      opacity: 0.75;
+      margin-top: 0.75rem;
     }
 
     /* ===================
@@ -220,14 +231,27 @@
 
   <script>
     /**
+     * Constants.
+     */
+    const PURIFY_OFFICIAL_DOMAIN = 'https://purify.video/';
+    const VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+    const PLAYLIST_ID_RE = /^[A-Za-z0-9_-]{13,42}$/;
+    const MAX_START_SECONDS = 86400;
+
+    /**
      * Set theme based on system.
      */
     function setThemeFromPreference() {
       const saved = localStorage.getItem("theme");
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       const theme = saved || (prefersDark ? "dark" : "light");
+
       document.documentElement.setAttribute("data-theme", theme);
-      document.getElementById("theme-checkbox").checked = theme === "dark";
+
+      const themeCheckbox = document.getElementById("theme-checkbox");
+      if (themeCheckbox) {
+        themeCheckbox.checked = theme === "dark";
+      }
     }
 
     /**
@@ -236,48 +260,377 @@
     function toggleTheme() {
       const isDark = document.getElementById("theme-checkbox").checked;
       const newTheme = isDark ? "dark" : "light";
+
       document.documentElement.setAttribute("data-theme", newTheme);
       localStorage.setItem("theme", newTheme);
     }
 
     /**
-		 * Extract key from URL and start video player.
+     * Parse YouTube start times:
+     * 60, 60s, 1m30s, 1h2m3s.
      */
-    function purify(path, params) {
-      document.querySelector('.iframe').style.display = 'block';
-      document.querySelector('iframe').setAttribute('src', 'https://www.youtube.com/embed/' + path + '?' + params.toString());
+    function parseStartTime(raw) {
+      if (raw == null) return 0;
+
+      const s = String(raw).trim().toLowerCase();
+      if (!s) return 0;
+
+      if (/^\d+$/.test(s)) {
+        const n = parseInt(s, 10);
+        return isFinite(n) && n > 0 ? Math.min(n, MAX_START_SECONDS) : 0;
+      }
+
+      const m = s.match(/^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/);
+      if (!m) return 0;
+
+      const h = m[1] ? parseInt(m[1], 10) : 0;
+      const mn = m[2] ? parseInt(m[2], 10) : 0;
+      const sc = m[3] ? parseInt(m[3], 10) : 0;
+
+      if (!(h || mn || sc)) return 0;
+
+      const total = h * 3600 + mn * 60 + sc;
+      return total > 0 ? Math.min(total, MAX_START_SECONDS) : 0;
+    }
+
+    /**
+     * Extract start time from URL params or hash.
+     */
+    function extractStartFromUrl(url) {
+      const raw =
+        url.searchParams.get('t') ||
+        url.searchParams.get('start') ||
+        url.searchParams.get('start_seconds');
+
+      const n = parseStartTime(raw);
+      if (n) return n;
+
+      const hash = (url.hash || '').replace(/^#/, '');
+
+      if (hash) {
+        const hp = new URLSearchParams(hash);
+        const hraw = hp.get('t') || hp.get('start');
+
+        if (hraw) return parseStartTime(hraw);
+
+        const bare = parseStartTime(hash);
+        if (bare) return bare;
+      }
+
+      return 0;
+    }
+
+    /**
+     * Accept many YouTube formats and return:
+     * { videoId?, playlistId?, startSeconds? }
+     */
+    function parseInput(input) {
+      if (input == null) return null;
+
+      const trimmed = String(input).trim();
+      if (!trimmed) return null;
+
+      // Plain 11-character YouTube video ID.
+      if (VIDEO_ID_RE.test(trimmed)) {
+        return { videoId: trimmed };
+      }
+
+      // Plain playlist ID.
+      if (/^(PL|UU|LL|FL|RD|OL|UL|PU|TL)[A-Za-z0-9_-]{10,}$/.test(trimmed) && PLAYLIST_ID_RE.test(trimmed)) {
+        return { playlistId: trimmed };
+      }
+
+      let url;
+
+      try {
+        const candidate = /^[a-z]+:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed;
+        url = new URL(candidate);
+      } catch (e) {
+        try {
+          const decoded = decodeURIComponent(trimmed);
+
+          if (decoded && decoded !== trimmed) {
+            return parseInput(decoded);
+          }
+        } catch (_) {}
+
+        return null;
+      }
+
+      const host = url.hostname.toLowerCase().replace(/^www\./, '');
+      const params = url.searchParams;
+
+      // youtu.be/<id>
+      if (host === 'youtu.be') {
+        const shortId = url.pathname.replace(/^\/+/, '').split('/')[0] || '';
+        const out = {};
+
+        if (VIDEO_ID_RE.test(shortId)) {
+          out.videoId = shortId;
+        }
+
+        const list = params.get('list');
+        if (list && PLAYLIST_ID_RE.test(list)) {
+          out.playlistId = list;
+        }
+
+        const start = extractStartFromUrl(url);
+        if (start && out.videoId) {
+          out.startSeconds = start;
+        }
+
+        return (out.videoId || out.playlistId) ? out : null;
+      }
+
+      const isYouTube =
+        host === 'youtube.com' ||
+        host === 'm.youtube.com' ||
+        host === 'music.youtube.com' ||
+        host === 'youtube-nocookie.com' ||
+        host === 'gaming.youtube.com';
+
+      if (isYouTube) {
+        const path = url.pathname;
+        const out = {};
+
+        if (path === '/watch' || path === '/watch/') {
+          const videoId = params.get('v');
+          if (videoId && VIDEO_ID_RE.test(videoId)) {
+            out.videoId = videoId;
+          }
+
+          const list = params.get('list');
+          if (list && PLAYLIST_ID_RE.test(list)) {
+            out.playlistId = list;
+          }
+        } else if (path.indexOf('/shorts/') === 0) {
+          const shortsId = path.split('/')[2] || '';
+          if (VIDEO_ID_RE.test(shortsId)) {
+            out.videoId = shortsId;
+          }
+        } else if (path.indexOf('/embed/') === 0) {
+          const embedId = path.split('/')[2] || '';
+
+          if (embedId === 'videoseries') {
+            const embedList = params.get('list');
+            if (embedList && PLAYLIST_ID_RE.test(embedList)) {
+              out.playlistId = embedList;
+            }
+          } else if (VIDEO_ID_RE.test(embedId)) {
+            out.videoId = embedId;
+
+            const embedList = params.get('list');
+            if (embedList && PLAYLIST_ID_RE.test(embedList)) {
+              out.playlistId = embedList;
+            }
+          }
+        } else if (path.indexOf('/live/') === 0) {
+          const liveId = path.split('/')[2] || '';
+          if (VIDEO_ID_RE.test(liveId)) {
+            out.videoId = liveId;
+          }
+        } else if (path.indexOf('/v/') === 0) {
+          const oldId = path.split('/')[2] || '';
+          if (VIDEO_ID_RE.test(oldId)) {
+            out.videoId = oldId;
+          }
+        } else if (path === '/playlist' || path === '/playlist/') {
+          const playlistId = params.get('list');
+          if (playlistId && PLAYLIST_ID_RE.test(playlistId)) {
+            out.playlistId = playlistId;
+          }
+        }
+
+        if (out.videoId) {
+          const start = extractStartFromUrl(url);
+          if (start) {
+            out.startSeconds = start;
+          }
+        }
+
+        return (out.videoId || out.playlistId) ? out : null;
+      }
+
+      /**
+       * Legacy Purify format:
+       * https://purify-video.github.io/?v=ENCODED_YOUTUBE_URL
+       *
+       * This is used for parsing only.
+       * It does NOT redirect on page load.
+       */
+      const vParam = params.get('v');
+
+      if (vParam) {
+        try {
+          const decoded = decodeURIComponent(vParam);
+          const rec = parseInput(decoded);
+
+          if (rec) {
+            if (!rec.playlistId) {
+              const outerList = params.get('list');
+              if (outerList && PLAYLIST_ID_RE.test(outerList)) {
+                rec.playlistId = outerList;
+              }
+            }
+
+            if (!rec.startSeconds && rec.videoId) {
+              const outerStart = extractStartFromUrl(url);
+              if (outerStart) {
+                rec.startSeconds = outerStart;
+              }
+            }
+
+            return rec;
+          }
+
+          if (VIDEO_ID_RE.test(decoded)) {
+            const out = { videoId: decoded };
+
+            const list = params.get('list');
+            if (list && PLAYLIST_ID_RE.test(list)) {
+              out.playlistId = list;
+            }
+
+            const start = extractStartFromUrl(url);
+            if (start) {
+              out.startSeconds = start;
+            }
+
+            return out;
+          }
+        } catch (_) {}
+      }
+
+      const listOnly = params.get('list');
+      if (listOnly && PLAYLIST_ID_RE.test(listOnly)) {
+        return { playlistId: listOnly };
+      }
+
+      return null;
+    }
+
+    /**
+     * Build official purify.video equivalent.
+     * Used only when the user manually submits the form.
+     */
+    function buildOfficialPurifyUrl(parsed) {
+      if (!parsed) return null;
+
+      const params = new URLSearchParams();
+
+      if (parsed.videoId) {
+        params.set('v', parsed.videoId);
+      }
+
+      if (parsed.playlistId) {
+        params.set('list', parsed.playlistId);
+      }
+
+      if (parsed.videoId && parsed.startSeconds && parsed.startSeconds > 0) {
+        params.set('t', String(parsed.startSeconds));
+      }
+
+      const query = params.toString();
+
+      return query ? PURIFY_OFFICIAL_DOMAIN.replace(/\/$/, '') + '/watch?' + query : null;
+    }
+
+    /**
+     * Build local YouTube embed URL.
+     * Used on page load so old GitHub links keep working without redirecting.
+     */
+    function buildEmbedUrl(parsed) {
+      if (!parsed) return null;
+
+      const params = new URLSearchParams();
+
+      if (parsed.videoId && parsed.startSeconds && parsed.startSeconds > 0) {
+        params.set('start', String(parsed.startSeconds));
+      }
+
+      if (parsed.videoId && parsed.playlistId) {
+        params.set('list', parsed.playlistId);
+        return 'https://www.youtube.com/embed/' + encodeURIComponent(parsed.videoId) + '?' + params.toString();
+      }
+
+      if (parsed.videoId) {
+        return 'https://www.youtube.com/embed/' + encodeURIComponent(parsed.videoId) + '?' + params.toString();
+      }
+
+      if (parsed.playlistId) {
+        params.set('listType', 'playlist');
+        params.set('list', parsed.playlistId);
+        return 'https://www.youtube.com/embed/videoseries?' + params.toString();
+      }
+
+      return null;
+    }
+
+    /**
+     * Start local video player on purify-video.github.io.
+     */
+    function purifyLocal(parsed) {
+      const embedUrl = buildEmbedUrl(parsed);
+      if (!embedUrl) return;
+
+      const iframeWrapper = document.querySelector('.iframe');
+      const iframe = document.querySelector('iframe');
+
+      if (!iframeWrapper || !iframe) return;
+
+      iframeWrapper.style.display = 'block';
+      iframe.setAttribute('src', embedUrl);
+    }
+
+    /**
+     * Redirect to official purify.video only after manual form submit.
+     */
+    function setupFormRedirect() {
+      const form = document.getElementById('purify-form');
+      const input = document.getElementById('youtube-input');
+
+      if (!form || !input) return;
+
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        const parsed = parseInput(input.value);
+        const redirectUrl = buildOfficialPurifyUrl(parsed);
+
+        if (!redirectUrl) {
+          alert('Please enter a valid YouTube video or playlist URL.');
+          return;
+        }
+
+        window.location.href = redirectUrl;
+      });
     }
 
     /**
      * Autostart on onload event.
+     *
+     * Important:
+     * This does NOT redirect to purify.video on load.
+     * Old GitHub links continue to work locally.
      */
     function init() {
       setThemeFromPreference();
-      const params = new URLSearchParams(window.location.search.substring(1));
-      if (params.has('v')) {
-        const url = new URL(params.get('v'));
-        const urlParams = new URLSearchParams(url.search.substring(1));
-        // See https://developers.google.com/youtube/player_parameters for supported parameters
-        const outputParams = new URLSearchParams();
+      setupFormRedirect();
 
-        if (urlParams.has('t')) {
-          outputParams.append('start', urlParams.get('t'));
+      const input = document.getElementById('youtube-input');
+      const params = new URLSearchParams(window.location.search.substring(1));
+
+      if (params.has('v')) {
+        const originalValue = params.get('v');
+
+        if (input && originalValue) {
+          input.value = originalValue;
         }
 
-        if (url.hostname == 'youtube.com' || url.hostname.endsWith('.youtube.com')) {
-          if (urlParams.has('list')) {
-            outputParams.append('listType', 'playlist');
-            outputParams.append('list', urlParams.get('list'));
-          }
+        const parsed = parseInput(originalValue);
 
-          let id = '';
-          if (urlParams.has('v')) {
-            id = urlParams.get('v');
-          }
-          purify(id, outputParams);
-        } else if (url.hostname == 'youtu.be') {
-          const id = url.pathname.substring(1);
-          purify(id, outputParams);
+        if (parsed) {
+          purifyLocal(parsed);
         }
       }
     }
@@ -306,18 +659,29 @@
   <header>
     <h1>purify video</h1>
     <h2>Watch purified YouTube videos with no ads. Just focus</h2>
-	  <p style="font-size:0.95rem;opacity:0.85;">
-  Official domain: <a href="https://purify.video/">purify.video</a>
-</p>
-    <form method="get" action="">
-      <input type="text" name="v" placeholder="Enter YouTube URL" />
+
+    <p class="official-domain-note">
+      Official domain: <a href="https://purify.video/">purify.video</a>
+    </p>
+
+    <form id="purify-form">
+      <input id="youtube-input" type="text" name="v" placeholder="Enter YouTube URL" />
       <button type="submit">Purify</button>
     </form>
+
+    <p class="form-note">
+      Old links still work here. New searches open on the official purify.video domain.
+    </p>
   </header>
 
   <section class="iframe">
-    
-	  <iframe credentialless frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *; web-share *" sandbox="allow-scripts allow-same-origin allow-presentation" src=""></iframe>
+    <iframe
+      credentialless
+      frameborder="0"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *; web-share *"
+      sandbox="allow-scripts allow-same-origin allow-presentation"
+      src="">
+    </iframe>
   </section>
 
   <section>
@@ -328,32 +692,33 @@
   </section>
 
   <footer>
-
     <p>YouTube is the source of all content</p>
- <p>
-  Purify Video is maintained by
-  <a href="https://skipvids.com/" target="_blank" rel="noopener">SkipVids</a> —
-  the full YouTube ad-free and sponsor-free experience.
-</p>
+
+    <p>
+      Purify Video is maintained by
+      <a href="https://skipvids.com/" target="_blank" rel="noopener">SkipVids</a> —
+      the full YouTube ad-free and sponsor-free experience.
+    </p>
+
     <p>This website <strong>does not store</strong> any data such as cookies to enable essential site functionality.</p>
   </footer>
 
-<!-- Default Statcounter code for Purify Video
-https://purify-video.github.io -->
-<script type="text/javascript">
-var sc_project=13237369; 
-var sc_invisible=1; 
-var sc_security="0465583a"; 
-</script>
-<script type="text/javascript"
-src="https://www.statcounter.com/counter/counter.js"
-async></script>
-<noscript><div class="statcounter"><a title="Web Analytics"
-href="https://statcounter.com/" target="_blank"><img
-class="statcounter"
-src="https://c.statcounter.com/13237369/0/0465583a/1/"
-alt="Web Analytics"
-referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
-<!-- End of Statcounter Code -->
+  <!-- Default Statcounter code for Purify Video
+  https://purify-video.github.io -->
+  <script type="text/javascript">
+  var sc_project=13237369;
+  var sc_invisible=1;
+  var sc_security="0465583a";
+  </script>
+  <script type="text/javascript"
+  src="https://www.statcounter.com/counter/counter.js"
+  async></script>
+  <noscript><div class="statcounter"><a title="Web Analytics"
+  href="https://statcounter.com/" target="_blank"><img
+  class="statcounter"
+  src="https://c.statcounter.com/13237369/0/0465583a/1/"
+  alt="Web Analytics"
+  referrerPolicy="no-referrer-when-downgrade"></a></div></noscript>
+  <!-- End of Statcounter Code -->
 </body>
 </html>
