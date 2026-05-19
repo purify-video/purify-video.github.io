@@ -1,1063 +1,223 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
   <meta charset="utf-8">
-  <title>YouTube IFrame API Proxy Test</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="origin-when-cross-origin">
+  <title>Styling + proxy test</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 24px;
-      background: #111;
-      color: #fff;
-    }
-
-    h1 {
-      font-size: 22px;
-      margin-bottom: 12px;
-    }
-
-    h2 {
-      font-size: 16px;
-      margin-top: 24px;
-      margin-bottom: 10px;
-      color: #fff;
-    }
-
-    .buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    button,
-    select,
-    input {
-      padding: 10px 13px;
-      font-size: 14px;
-      border: 0;
-      border-radius: 6px;
-    }
-
-    button {
-      cursor: pointer;
-      background: #ff0000;
-      color: #fff;
-      font-weight: bold;
-    }
-
-    button.secondary {
-      background: #333;
-    }
-
-    button.cool {
-      background: #5b2cff;
-    }
-
-    button.test {
-      background: #0b6bcb;
-    }
-
-    button.warning {
-      background: #b45309;
-    }
-
-    button.active {
-      outline: 3px solid #fff;
-      box-shadow: 0 0 14px rgba(255, 255, 255, 0.45);
-    }
-
-    select,
-    input {
-      background: #222;
-      color: #fff;
-      border: 1px solid #555;
-    }
-
-    label {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      font-size: 12px;
-      color: #bbb;
-    }
-
-    .configGrid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: end;
-      margin-bottom: 16px;
-      max-width: 1000px;
-    }
-
-    #currentConfig {
-      max-width: 1000px;
-      white-space: pre-wrap;
-      font-size: 13px;
-      line-height: 1.45;
-      color: #ddd;
-      background: #181818;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 16px;
-      border: 1px solid #333;
-    }
-
-    #playerShell {
-      margin-top: 20px;
-      width: 100%;
-      max-width: 900px;
-      aspect-ratio: 16 / 9;
-      background: #000;
-      overflow: hidden;
-      position: relative;
-      transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease,
-        border-radius 0.25s ease,
-        filter 0.25s ease;
-    }
-
-    #playerMount,
-    #playerMount iframe {
-      width: 100%;
-      height: 100%;
-    }
-
-    #playerMount iframe {
-      display: block;
-      border: 0;
-    }
-
-    #playerShell.rounded {
-      border-radius: 22px;
-      box-shadow: 0 0 35px rgba(255, 0, 0, 0.35);
-    }
-
-    #playerShell.cinema {
-      max-width: 1100px;
-      box-shadow: 0 0 80px rgba(255, 255, 255, 0.18);
-    }
-
-    #playerShell.vivid iframe {
-      filter: contrast(1.2) saturate(1.35) brightness(1.04);
-    }
-
-    #playerShell.dark iframe {
-      filter: brightness(0.65) contrast(1.1);
-    }
-
-    #playerShell.floaty {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      width: 420px;
-      max-width: calc(100vw - 36px);
-      z-index: 999999;
-      border-radius: 14px;
-      box-shadow: 0 0 45px rgba(0, 0, 0, 0.8);
-    }
-
-    #log {
-      margin-top: 16px;
-      max-width: 900px;
-      white-space: pre-wrap;
-      font-size: 14px;
-      line-height: 1.45;
-      color: #ccc;
-      background: #1b1b1b;
-      padding: 12px;
-      border-radius: 8px;
-    }
+    body { margin: 0; padding: 20px; background: #111; color: #eee; font-family: Arial, sans-serif; }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 14px; color: #9cf; margin: 12px 0 6px; }
+    .box { background: #1c1c1c; border: 1px solid #333; border-radius: 8px; padding: 12px; margin: 12px 0; }
+    .player-wrap { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
+    iframe { width: 100%; height: 100%; border: 0; }
+    input, select { padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    input[type=text] { min-width: 220px; }
+    button { padding: 6px 10px; background: #2a6; border: 0; color: #fff; border-radius: 4px; cursor: pointer; margin: 2px; font-size: 12px; }
+    button:hover { background: #3b7; }
+    button.warn { background: #c63; }
+    button.alt { background: #46aae9; }
+    button.style-btn { background: #555; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    label { font-size: 12px; }
+    .logs { background: #0a0a0a; border: 1px solid #333; border-radius: 6px; padding: 8px; max-height: 280px; overflow: auto; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
+    .log-info { color: #ccc; }
+    .log-event { color: #9cf; }
+    .log-good { color: #6f6; }
+    .log-bad { color: #f66; }
+    .log-warn { color: #fc6; }
+    .stat { display: inline-block; padding: 2px 8px; background: #2a2a2a; border-radius: 3px; margin-right: 6px; font-size: 11px; }
+    .stat.good { background: #163; }
+    .stat.bad { background: #611; }
+    code { background: #292929; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+    .note { font-size: 11px; color: #888; margin-top: 4px; }
   </style>
 </head>
-
 <body>
+<div class="wrap">
 
-  <h1>YouTube IFrame API Proxy Test</h1>
+  <h1>Styling + proxy test</h1>
+  <p class="note">
+    Tests every styling lever we have access to and toggles between YouTube's real widget API and a PHP-proxied one with fingerprinting params stripped.
+  </p>
 
-  <div id="currentConfig">Loading config...</div>
-
-  <h2>Preset tests</h2>
-
-  <div class="buttons">
-    <button class="test" data-preset="current">YT origin + iframe remove + page origin</button>
-    <button class="test" data-preset="no-referrer">No referrer test, likely 153</button>
-    <button class="test" data-preset="origin">Referrer origin</button>
-    <button class="test" data-preset="strict-origin">Strict origin</button>
-    <button class="test" data-preset="remove-origin-page-origin">Remove origin + page origin</button>
-    <button class="test" data-preset="purifyvideo-origin">PurifyVideo origin</button>
-    <button class="test" data-preset="default">Default YouTube widget behaviour</button>
+  <div class="box">
+    <h2>Config</h2>
+    <div class="row">
+      <span>Shell:</span>
+      <input id="hostInput" type="text" value="https://purifyvideo.com">
+      <span>Video:</span>
+      <input id="videoInput" type="text" value="dQw4w9WgXcQ" style="min-width: 130px;">
+      <label><input type="checkbox" id="useProxy"> Use PHP-proxied widget API</label>
+      <label><input type="checkbox" id="hideControls"> controls=0</label>
+      <button onclick="load()">Load</button>
+    </div>
+    <p class="note">"Use PHP-proxied widget API" loads <code>/widgetapi-proxy.php</code> on the shell domain instead of YouTube's direct script.</p>
   </div>
 
-  <h2>Custom test</h2>
-
-  <div class="configGrid">
-    <label>
-      Proxy origin param
-      <select id="originSelect">
-        <option value="default">default</option>
-        <option value="remove">remove</option>
-        <option value="https://www.youtube.com">https://www.youtube.com</option>
-        <option value="https://purifyvideo.com">https://purifyvideo.com</option>
-        <option value="https://purify-video.github.io">https://purify-video.github.io</option>
-      </select>
-    </label>
-
-    <label>
-      Iframe referrerPolicy
-      <select id="referrerSelect">
-        <option value="default">default</option>
-        <option value="remove">remove attribute</option>
-        <option value="no-referrer">no-referrer</option>
-        <option value="origin">origin</option>
-        <option value="strict-origin">strict-origin</option>
-        <option value="origin-when-cross-origin">origin-when-cross-origin</option>
-        <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
-        <option value="unsafe-url">unsafe-url</option>
-      </select>
-    </label>
-
-    <label>
-      Parent page referrer meta
-      <select id="pageReferrerSelect">
-        <option value="default">default</option>
-        <option value="no-referrer">no-referrer</option>
-        <option value="origin">origin</option>
-        <option value="strict-origin">strict-origin</option>
-        <option value="origin-when-cross-origin">origin-when-cross-origin</option>
-        <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
-        <option value="unsafe-url">unsafe-url</option>
-      </select>
-    </label>
-
-    <label>
-      Embed host
-      <select id="hostSelect">
-        <option value="youtube">https://www.youtube.com</option>
-        <option value="nocookie">https://www.youtube-nocookie.com</option>
-      </select>
-    </label>
-
-    <label>
-      Video ID
-      <input id="videoIdInput" value="ko70cExuzZM" maxlength="11">
-    </label>
-
-    <button id="applyCustomBtn" class="test">Apply Custom Test</button>
+  <div class="box">
+    <h2>Status</h2>
+    <span class="stat" id="stat-ready">ready: -</span>
+    <span class="stat" id="stat-state">state: -</span>
+    <span class="stat" id="stat-ads">ads detected: 0</span>
   </div>
 
-  <div class="buttons">
-    <button id="openProxyBtn" class="secondary">Open Proxy JS</button>
-    <button id="copyProxyBtn" class="secondary">Copy Proxy URL</button>
-    <button id="clearParamsBtn" class="warning">Clear URL Params</button>
-  </div>
-
-  <h2>Player</h2>
-
-  <div class="buttons">
-    <button id="buildPlayerBtn">Build Player</button>
-    <button id="destroyBtn" class="secondary">Destroy</button>
-  </div>
-
-  <div class="buttons">
-    <button id="durationBtn">Get Duration</button>
-    <button id="iframeBtn">Get Iframe ID</button>
-    <button id="videoDataBtn">Get Title + Author</button>
-    <button id="srcBtn">Show Iframe Src</button>
-    <button id="referrerPolicyBtn">Show Iframe Referrer Policy</button>
-  </div>
-
-  <div class="buttons">
-    <button id="playBtn" class="secondary">Play</button>
-    <button id="pauseBtn" class="secondary">Pause</button>
-    <button id="muteBtn" class="secondary">Mute</button>
-    <button id="unmuteBtn" class="secondary">Unmute</button>
-    <button id="seekBtn" class="secondary">Seek +30s</button>
-    <button id="volumeBtn" class="secondary">Volume 50%</button>
-  </div>
-
-  <div class="buttons">
-    <button id="roundedBtn" class="cool">Rounded Glow</button>
-    <button id="cinemaBtn" class="cool">Cinema Mode</button>
-    <button id="vividBtn" class="cool">Vivid Filter</button>
-    <button id="darkBtn" class="cool">Dark Filter</button>
-    <button id="floatBtn" class="cool">Floating Mini</button>
-    <button id="resetStyleBtn" class="cool">Reset Style</button>
-  </div>
-
-  <div class="buttons">
-    <button id="fullscreenBtn">Fullscreen Iframe</button>
-    <button id="docPipBtn">Document PiP</button>
-    <button id="allowBtn">Set Iframe Permissions</button>
-  </div>
-
-  <div id="playerShell">
-    <div id="playerMount">
-      <div id="playerTarget"></div>
+  <div class="box">
+    <div class="player-wrap">
+      <iframe id="shellFrame"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *"
+              referrerpolicy="origin-when-cross-origin"
+              allowfullscreen></iframe>
     </div>
   </div>
 
-  <div id="log">Waiting...</div>
+  <div class="box">
+    <h2>Player controls</h2>
+    <div class="row">
+      <button onclick="cmd('play')">play</button>
+      <button onclick="cmd('pause')">pause</button>
+      <button onclick="cmd('mute')">mute</button>
+      <button onclick="cmd('unMute')">unmute</button>
+      <button onclick="cmd('seekTo', {seconds: 30, allowSeekAhead: true})">seek 30s</button>
+    </div>
+  </div>
 
-  <script>
-    var PROXY_BASE = "https://purifyvideo.com/widgetapi-proxy.php";
+  <div class="box">
+    <h2>Styling experiments — what we CAN do</h2>
+    <p class="note">These work because they're applied OUTSIDE the YouTube iframe or via CSS filter on the iframe element itself.</p>
 
-    var urlParams = new URLSearchParams(window.location.search);
+    <div class="row">
+      <strong style="font-size:11px;margin-right:8px;">CSS filter on iframe:</strong>
+      <button class="style-btn" onclick="cmd('applyStyle', {style: null})">none</button>
+      <button class="style-btn" onclick="cmd('applyStyle', {style: 'tint-warm'})">warm tint</button>
+      <button class="style-btn" onclick="cmd('applyStyle', {style: 'tint-cool'})">cool tint</button>
+      <button class="style-btn" onclick="cmd('applyStyle', {style: 'dim'})">dim</button>
+      <button class="style-btn" onclick="cmd('applyStyle', {style: 'vivid'})">vivid</button>
+    </div>
 
-    var currentOriginMode = urlParams.get("origin") || "https://www.youtube.com";
-    var currentReferrerMode = urlParams.get("referrer") || "remove";
-    var currentPageReferrerMode = urlParams.get("page_referrer") || "origin";
-    var currentHostMode = urlParams.get("host") || "youtube";
-    var testVideoId = urlParams.get("v") || "ko70cExuzZM";
+    <div class="row" style="margin-top:8px;">
+      <strong style="font-size:11px;margin-right:8px;">Overlays:</strong>
+      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayTop', show: true})">top bar ON</button>
+      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayTop', show: false})">top bar OFF</button>
+      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayBottom', show: true})">bottom bar ON</button>
+      <button class="style-btn" onclick="cmd('showOverlay', {which: 'overlayBottom', show: false})">bottom bar OFF</button>
+    </div>
 
-    if (!/^[a-zA-Z0-9_-]{11}$/.test(testVideoId)) {
-      testVideoId = "ko70cExuzZM";
+    <div class="row" style="margin-top:8px;">
+      <strong style="font-size:11px;margin-right:8px;">Ad cover:</strong>
+      <button class="style-btn" onclick="cmd('setAdCover', {show: true})">show ad cover</button>
+      <button class="style-btn" onclick="cmd('setAdCover', {show: false})">hide ad cover</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>What we CANNOT do</h2>
+    <p class="note">
+      These would require injecting CSS into <code>youtube-nocookie.com</code>'s iframe, which is blocked by the browser's same-origin policy. No amount of PHP proxying or postMessage gymnastics gets around this:
+    </p>
+    <ul style="font-size:12px; color:#bbb; margin: 4px 0;">
+      <li>Hide the YouTube logo in the player chrome</li>
+      <li>Change the colour of the progress bar</li>
+      <li>Hide individual buttons (share, watch later, etc.) on the player</li>
+      <li>Change the player's font, button shape, or layout</li>
+      <li>Style the "Watch on YouTube" link on pause</li>
+      <li>Modify the related videos panel that appears on end</li>
+    </ul>
+    <p class="note">
+      The only way to fully restyle the player is to extract the raw video stream and play it in your own HTML5 &lt;video&gt; element with a player like Plyr or Video.js.
+    </p>
+  </div>
+
+  <div class="box">
+    <h2>Log</h2>
+    <div id="log" class="logs"></div>
+  </div>
+
+</div>
+
+<script>
+  var shellOrigin = '';
+  var nextRequestId = 1;
+  var adCount = 0;
+
+  function log(msg, cls) {
+    var el = document.getElementById('log');
+    var div = document.createElement('div');
+    div.className = 'log-' + (cls || 'info');
+    div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  function setStat(id, val, good) {
+    var el = document.getElementById('stat-' + id);
+    el.textContent = id + ': ' + val;
+    el.className = 'stat ' + (good === true ? 'good' : (good === false ? 'bad' : ''));
+  }
+
+  function load() {
+    var host = document.getElementById('hostInput').value.trim();
+    var videoId = document.getElementById('videoInput').value.trim();
+    var useProxy = document.getElementById('useProxy').checked;
+    var hideControls = document.getElementById('hideControls').checked;
+
+    if (!host || !videoId) return;
+    shellOrigin = host;
+    adCount = 0;
+    setStat('ready', 'loading');
+    setStat('state', '-');
+    setStat('ads', '0');
+
+    var params = new URLSearchParams();
+    params.set('parentOrigin', window.location.origin);
+    params.set('playsinline', '1');
+    params.set('rel', '0');
+    if (useProxy) params.set('proxyApi', '1');
+    if (hideControls) params.set('controls', '0');
+
+    var src = host + '/embed/' + encodeURIComponent(videoId) + '?' + params.toString();
+    log('Loading: ' + src);
+    document.getElementById('shellFrame').src = src;
+  }
+
+  function cmd(action, extra) {
+    var iframe = document.getElementById('shellFrame');
+    if (!iframe.contentWindow) { log('iframe not ready', 'bad'); return; }
+    var msg = Object.assign({ action: action }, extra || {});
+    iframe.contentWindow.postMessage(msg, shellOrigin || '*');
+    log('→ ' + action + (extra ? ' ' + JSON.stringify(extra) : ''), 'info');
+  }
+
+  function stateName(s) {
+    return {0:'ENDED',1:'PLAYING',2:'PAUSED',3:'BUFFERING',5:'CUED','-1':'UNSTARTED'}[s] || s;
+  }
+
+  window.addEventListener('message', function (event) {
+    if (shellOrigin && event.origin !== shellOrigin) return;
+    if (!event.data || typeof event.data !== 'object') return;
+
+    var data = event.data;
+
+    if (data.event === 'ready') {
+      log('← ready', 'good');
+      setStat('ready', 'YES', true);
+    } else if (data.event === 'stateChange') {
+      log('← state: ' + stateName(data.state), 'event');
+      setStat('state', stateName(data.state), true);
+    } else if (data.event === 'adDetected') {
+      adCount++;
+      setStat('ads', adCount, false);
+      log('← AD DETECTED: ' + data.actualId, 'warn');
+    } else if (data.event === 'error') {
+      log('← error: ' + (data.code || data.message), 'bad');
+    } else if (data.event === 'response') {
+      log('← ' + data.property + ' = ' + JSON.stringify(data.value), 'good');
+    } else {
+      log('← ' + JSON.stringify(data), 'info');
     }
-
-    var player = null;
-    var youtubeApiReady = false;
-    var pendingBuild = false;
-
-    var logEl = document.getElementById("log");
-    var playerShell = document.getElementById("playerShell");
-    var playerMount = document.getElementById("playerMount");
-    var currentConfigEl = document.getElementById("currentConfig");
-
-    var pipWindow = null;
-    var pipPlaceholder = null;
-
-    function proxyUrl() {
-      var p = new URLSearchParams();
-
-      if (currentOriginMode !== "default") {
-        p.set("origin", currentOriginMode);
-      }
-
-      if (currentReferrerMode !== "default") {
-        p.set("referrer", currentReferrerMode);
-      }
-
-      if (currentPageReferrerMode !== "default") {
-        p.set("page_referrer", currentPageReferrerMode);
-      }
-
-      /*
-        Cache-bust the browser request while testing.
-        Your PHP proxy may still internally cache based on origin/referrer/page_referrer.
-      */
-      p.set("_t", String(Date.now()));
-
-      return PROXY_BASE + "?" + p.toString();
-    }
-
-    var API_URL = proxyUrl();
-
-    function selectedHost() {
-      if (currentHostMode === "nocookie") {
-        return "https://www.youtube-nocookie.com";
-      }
-
-      return "https://www.youtube.com";
-    }
-
-    function log(msg) {
-      logEl.textContent = msg;
-      console.log(msg);
-    }
-
-    function appendLog(msg) {
-      logEl.textContent += "\n" + msg;
-      console.log(msg);
-    }
-
-    function updateConfigBox() {
-      var expectedReferer = "";
-
-      if (currentPageReferrerMode === "no-referrer" || currentReferrerMode === "no-referrer") {
-        expectedReferer = "Likely no Referer header, but this may cause YouTube Error 153.";
-      } else if (
-        currentPageReferrerMode === "origin" ||
-        currentPageReferrerMode === "strict-origin" ||
-        currentPageReferrerMode === "origin-when-cross-origin" ||
-        currentPageReferrerMode === "strict-origin-when-cross-origin"
-      ) {
-        expectedReferer = "Expected Referer header: " + window.location.origin + "/";
-      } else {
-        expectedReferer = "Expected Referer depends on browser/default policy. Usually origin-level on modern Chrome.";
-      }
-
-      currentConfigEl.textContent =
-        "Current test config" +
-        "\nVideo ID: " + testVideoId +
-        "\nEmbed host: " + selectedHost() +
-        "\nProxy origin mode: " + currentOriginMode +
-        "\nIframe referrer mode: " + currentReferrerMode +
-        "\nPage referrer mode: " + currentPageReferrerMode +
-        "\nProxy script URL: " + API_URL +
-        "\n" + expectedReferer +
-        "\n\nUse DevTools > Network > click the youtube.com/embed request > Request Headers > Referer.";
-    }
-
-    function setControlsFromCurrentConfig() {
-      document.getElementById("originSelect").value = currentOriginMode;
-      document.getElementById("referrerSelect").value = currentReferrerMode;
-      document.getElementById("pageReferrerSelect").value = currentPageReferrerMode;
-      document.getElementById("hostSelect").value = currentHostMode;
-      document.getElementById("videoIdInput").value = testVideoId;
-    }
-
-    function reloadWithConfig(origin, referrer, pageReferrer, host, videoId) {
-      var p = new URLSearchParams();
-
-      p.set("origin", origin);
-      p.set("referrer", referrer);
-      p.set("page_referrer", pageReferrer);
-      p.set("host", host || currentHostMode || "youtube");
-      p.set("v", videoId || testVideoId);
-      p.set("r", String(Date.now()));
-
-      window.location.search = p.toString();
-    }
-
-    function applyPreset(name) {
-      if (name === "current") {
-        reloadWithConfig(
-          "https://www.youtube.com",
-          "remove",
-          "origin",
-          "youtube",
-          testVideoId
-        );
-        return;
-      }
-
-      if (name === "no-referrer") {
-        reloadWithConfig(
-          "https://www.youtube.com",
-          "no-referrer",
-          "no-referrer",
-          "youtube",
-          testVideoId
-        );
-        return;
-      }
-
-      if (name === "origin") {
-        reloadWithConfig(
-          "https://www.youtube.com",
-          "origin",
-          "origin",
-          "youtube",
-          testVideoId
-        );
-        return;
-      }
-
-      if (name === "strict-origin") {
-        reloadWithConfig(
-          "https://www.youtube.com",
-          "strict-origin",
-          "strict-origin",
-          "youtube",
-          testVideoId
-        );
-        return;
-      }
-
-      if (name === "remove-origin-page-origin") {
-        reloadWithConfig(
-          "remove",
-          "remove",
-          "origin",
-          "youtube",
-          testVideoId
-        );
-        return;
-      }
-
-      if (name === "purifyvideo-origin") {
-        reloadWithConfig(
-          "https://purifyvideo.com",
-          "origin",
-          "origin",
-          "youtube",
-          testVideoId
-        );
-        return;
-      }
-
-      if (name === "default") {
-        reloadWithConfig(
-          "default",
-          "default",
-          "default",
-          "youtube",
-          testVideoId
-        );
-      }
-    }
-
-    function markActivePresetButtons() {
-      var buttons = document.querySelectorAll("[data-preset]");
-
-      buttons.forEach(function (btn) {
-        btn.classList.remove("active");
-      });
-
-      buttons.forEach(function (btn) {
-        var name = btn.getAttribute("data-preset");
-
-        if (
-          name === "current" &&
-          currentOriginMode === "https://www.youtube.com" &&
-          currentReferrerMode === "remove" &&
-          currentPageReferrerMode === "origin"
-        ) {
-          btn.classList.add("active");
-        }
-
-        if (
-          name === "no-referrer" &&
-          currentOriginMode === "https://www.youtube.com" &&
-          currentReferrerMode === "no-referrer" &&
-          currentPageReferrerMode === "no-referrer"
-        ) {
-          btn.classList.add("active");
-        }
-
-        if (
-          name === "origin" &&
-          currentOriginMode === "https://www.youtube.com" &&
-          currentReferrerMode === "origin" &&
-          currentPageReferrerMode === "origin"
-        ) {
-          btn.classList.add("active");
-        }
-
-        if (
-          name === "strict-origin" &&
-          currentOriginMode === "https://www.youtube.com" &&
-          currentReferrerMode === "strict-origin" &&
-          currentPageReferrerMode === "strict-origin"
-        ) {
-          btn.classList.add("active");
-        }
-
-        if (
-          name === "remove-origin-page-origin" &&
-          currentOriginMode === "remove" &&
-          currentReferrerMode === "remove" &&
-          currentPageReferrerMode === "origin"
-        ) {
-          btn.classList.add("active");
-        }
-
-        if (
-          name === "purifyvideo-origin" &&
-          currentOriginMode === "https://purifyvideo.com" &&
-          currentReferrerMode === "origin" &&
-          currentPageReferrerMode === "origin"
-        ) {
-          btn.classList.add("active");
-        }
-
-        if (
-          name === "default" &&
-          currentOriginMode === "default" &&
-          currentReferrerMode === "default" &&
-          currentPageReferrerMode === "default"
-        ) {
-          btn.classList.add("active");
-        }
-      });
-    }
-
-    function ensurePlayerTarget() {
-      playerMount.innerHTML = '<div id="playerTarget"></div>';
-    }
-
-    function getPlayerOrWarn() {
-      if (!player || typeof player.getIframe !== "function") {
-        log("Player is not built yet.");
-        return null;
-      }
-
-      return player;
-    }
-
-    function getIframeOrWarn() {
-      var p = getPlayerOrWarn();
-
-      if (!p) {
-        return null;
-      }
-
-      try {
-        return p.getIframe();
-      } catch (e) {
-        log("Could not get iframe: " + e.message);
-        return null;
-      }
-    }
-
-    function setUsefulIframePermissions() {
-      var iframe = getIframeOrWarn();
-
-      if (!iframe) {
-        return;
-      }
-
-      iframe.setAttribute(
-        "allow",
-        [
-          "accelerometer",
-          "autoplay",
-          "clipboard-write",
-          "encrypted-media",
-          "gyroscope",
-          "picture-in-picture",
-          "web-share",
-          "fullscreen"
-        ].join("; ")
-      );
-
-      iframe.setAttribute("allowfullscreen", "1");
-      iframe.setAttribute("playsinline", "1");
-
-      log("Iframe permissions set:\n" + iframe.getAttribute("allow"));
-    }
-
-    function loadYouTubeIframeApi() {
-      if (window.YT && window.YT.Player) {
-        youtubeApiReady = true;
-        return;
-      }
-
-      if (document.getElementById("youtube-iframe-api")) {
-        return;
-      }
-
-      var tag = document.createElement("script");
-      tag.id = "youtube-iframe-api";
-      tag.src = API_URL;
-      tag.async = true;
-
-      var firstScriptTag = document.getElementsByTagName("script")[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-      log("Loading YouTube IFrame API from proxy:\n" + API_URL);
-    }
-
-    window.onYouTubeIframeAPIReady = function () {
-      youtubeApiReady = true;
-      log("YouTube IFrame API ready.");
-
-      if (pendingBuild) {
-        buildPlayer();
-      }
-    };
-
-    function buildPlayer() {
-      pendingBuild = false;
-
-      if (!youtubeApiReady || !window.YT || !window.YT.Player) {
-        pendingBuild = true;
-        loadYouTubeIframeApi();
-        return;
-      }
-
-      if (player && typeof player.destroy === "function") {
-        try {
-          player.destroy();
-        } catch (e) {}
-        player = null;
-      }
-
-      ensurePlayerTarget();
-
-      log("Building player...");
-
-      player = new YT.Player("playerTarget", {
-        width: "100%",
-        height: "100%",
-        videoId: testVideoId,
-        host: selectedHost(),
-
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          disablekb: 0,
-          fs: 1,
-          playsinline: 1,
-          rel: 0,
-          modestbranding: 1,
-          iv_load_policy: 3
-        },
-
-        events: {
-          onReady: function (event) {
-            log("Player ready. Attempting playback...");
-
-            setUsefulIframePermissions();
-
-            try {
-              event.target.playVideo();
-            } catch (e) {
-              appendLog("playVideo failed: " + e.message);
-            }
-          },
-
-          onStateChange: function (event) {
-            var stateName = "UNKNOWN";
-
-            if (event.data === YT.PlayerState.UNSTARTED) stateName = "UNSTARTED";
-            if (event.data === YT.PlayerState.ENDED) stateName = "ENDED";
-            if (event.data === YT.PlayerState.PLAYING) stateName = "PLAYING";
-            if (event.data === YT.PlayerState.PAUSED) stateName = "PAUSED";
-            if (event.data === YT.PlayerState.BUFFERING) stateName = "BUFFERING";
-            if (event.data === YT.PlayerState.CUED) stateName = "CUED";
-
-            log("Player state: " + stateName);
-          },
-
-          onPlaybackQualityChange: function (event) {
-            log("Playback quality changed: " + event.data);
-          },
-
-          onPlaybackRateChange: function (event) {
-            log("Playback rate changed: " + event.data);
-          },
-
-          onError: function (event) {
-            log("YouTube player error: " + event.data);
-          }
-        }
-      });
-    }
-
-    function destroyPlayer() {
-      if (player && typeof player.destroy === "function") {
-        player.destroy();
-        player = null;
-      }
-
-      ensurePlayerTarget();
-      log("Player destroyed.");
-    }
-
-    function getDuration() {
-      var p = getPlayerOrWarn();
-
-      if (!p) {
-        return;
-      }
-
-      var duration = p.getDuration();
-      log("Duration: " + duration + " seconds");
-    }
-
-    function getIframeDetails() {
-      var iframe = getIframeOrWarn();
-
-      if (!iframe) {
-        return;
-      }
-
-      log(
-        "Iframe details:" +
-        "\nID: " + iframe.id +
-        "\nTag: " + iframe.tagName +
-        "\nWidth: " + iframe.width +
-        "\nHeight: " + iframe.height +
-        "\nAllow: " + iframe.getAttribute("allow") +
-        "\nReferrerPolicy attribute: " + iframe.getAttribute("referrerpolicy") +
-        "\nreferrerPolicy property: " + iframe.referrerPolicy
-      );
-    }
-
-    function getVideoData() {
-      var p = getPlayerOrWarn();
-
-      if (!p) {
-        return;
-      }
-
-      var data = p.getVideoData ? p.getVideoData() : {};
-
-      log(
-        "Video data:" +
-        "\nTitle: " + (data.title || "(empty)") +
-        "\nAuthor: " + (data.author || "(empty)") +
-        "\nVideo ID: " + (data.video_id || "(empty)")
-      );
-    }
-
-    function showIframeSrc() {
-      var iframe = getIframeOrWarn();
-
-      if (!iframe) {
-        return;
-      }
-
-      log("Iframe src:\n" + iframe.src);
-    }
-
-    function showIframeReferrerPolicy() {
-      var iframe = getIframeOrWarn();
-
-      if (!iframe) {
-        return;
-      }
-
-      log(
-        "Iframe referrer policy:" +
-        "\nAttribute: " + iframe.getAttribute("referrerpolicy") +
-        "\nProperty: " + iframe.referrerPolicy +
-        "\n\nCheck the real request header in DevTools > Network > youtube.com/embed > Request Headers > Referer."
-      );
-    }
-
-    function playVideo() {
-      var p = getPlayerOrWarn();
-      if (p) p.playVideo();
-    }
-
-    function pauseVideo() {
-      var p = getPlayerOrWarn();
-      if (p) p.pauseVideo();
-    }
-
-    function muteVideo() {
-      var p = getPlayerOrWarn();
-
-      if (p) {
-        p.mute();
-        log("Muted.");
-      }
-    }
-
-    function unmuteVideo() {
-      var p = getPlayerOrWarn();
-
-      if (p) {
-        p.unMute();
-        log("Unmuted.");
-      }
-    }
-
-    function seekForward() {
-      var p = getPlayerOrWarn();
-
-      if (!p) {
-        return;
-      }
-
-      var now = p.getCurrentTime();
-      p.seekTo(now + 30, true);
-      log("Seeked to: " + Math.round(now + 30) + " seconds");
-    }
-
-    function setVolumeHalf() {
-      var p = getPlayerOrWarn();
-
-      if (!p) {
-        return;
-      }
-
-      p.setVolume(50);
-      log("Volume set to 50%.");
-    }
-
-    function toggleClass(className) {
-      playerShell.classList.toggle(className);
-      log("Toggled style: " + className);
-    }
-
-    function resetStyles() {
-      playerShell.className = "";
-      log("Styles reset.");
-    }
-
-    async function fullscreenIframe() {
-      var iframe = getIframeOrWarn();
-
-      if (!iframe) {
-        return;
-      }
-
-      try {
-        if (iframe.requestFullscreen) {
-          await iframe.requestFullscreen();
-          log("Requested fullscreen on iframe.");
-        } else if (iframe.webkitRequestFullscreen) {
-          iframe.webkitRequestFullscreen();
-          log("Requested webkit fullscreen on iframe.");
-        } else {
-          log("Fullscreen API not supported here.");
-        }
-      } catch (e) {
-        log("Fullscreen failed: " + e.message);
-      }
-    }
-
-    async function openDocumentPip() {
-      var iframe = getIframeOrWarn();
-
-      if (!iframe) {
-        return;
-      }
-
-      if (!window.documentPictureInPicture ||
-          typeof window.documentPictureInPicture.requestWindow !== "function") {
-        log("Document Picture-in-Picture is not supported in this browser.");
-        return;
-      }
-
-      if (pipWindow && !pipWindow.closed) {
-        pipWindow.focus();
-        log("Document PiP window already open.");
-        return;
-      }
-
-      try {
-        pipPlaceholder = document.createComment("youtube iframe placeholder");
-        iframe.parentNode.insertBefore(pipPlaceholder, iframe);
-
-        pipWindow = await window.documentPictureInPicture.requestWindow({
-          width: 520,
-          height: 320
-        });
-
-        pipWindow.document.body.style.margin = "0";
-        pipWindow.document.body.style.background = "#000";
-        pipWindow.document.body.style.overflow = "hidden";
-
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.display = "block";
-        iframe.style.border = "0";
-
-        pipWindow.document.body.appendChild(iframe);
-
-        pipWindow.addEventListener("pagehide", function () {
-          try {
-            if (pipPlaceholder && pipPlaceholder.parentNode) {
-              pipPlaceholder.parentNode.replaceChild(iframe, pipPlaceholder);
-            } else {
-              playerMount.appendChild(iframe);
-            }
-
-            iframe.style.width = "100%";
-            iframe.style.height = "100%";
-            iframe.style.display = "block";
-            iframe.style.border = "0";
-
-            pipWindow = null;
-            pipPlaceholder = null;
-            log("Document PiP closed. Iframe restored.");
-          } catch (e) {
-            console.warn(e);
-          }
-        });
-
-        log("Document PiP opened.");
-      } catch (e) {
-        log("Document PiP failed: " + e.message);
-      }
-    }
-
-    document.querySelectorAll("[data-preset]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        applyPreset(btn.getAttribute("data-preset"));
-      });
-    });
-
-    document.getElementById("applyCustomBtn").addEventListener("click", function () {
-      var customVideoId = document.getElementById("videoIdInput").value.trim();
-
-      if (!/^[a-zA-Z0-9_-]{11}$/.test(customVideoId)) {
-        alert("Invalid YouTube video ID.");
-        return;
-      }
-
-      reloadWithConfig(
-        document.getElementById("originSelect").value,
-        document.getElementById("referrerSelect").value,
-        document.getElementById("pageReferrerSelect").value,
-        document.getElementById("hostSelect").value,
-        customVideoId
-      );
-    });
-
-    document.getElementById("openProxyBtn").addEventListener("click", function () {
-      window.open(API_URL, "_blank", "noopener,noreferrer");
-    });
-
-    document.getElementById("copyProxyBtn").addEventListener("click", async function () {
-      try {
-        await navigator.clipboard.writeText(API_URL);
-        log("Copied proxy URL:\n" + API_URL);
-      } catch (e) {
-        log("Could not copy. Proxy URL:\n" + API_URL);
-      }
-    });
-
-    document.getElementById("clearParamsBtn").addEventListener("click", function () {
-      window.location.href = window.location.pathname;
-    });
-
-    document.getElementById("buildPlayerBtn").addEventListener("click", buildPlayer);
-    document.getElementById("destroyBtn").addEventListener("click", destroyPlayer);
-
-    document.getElementById("durationBtn").addEventListener("click", getDuration);
-    document.getElementById("iframeBtn").addEventListener("click", getIframeDetails);
-    document.getElementById("videoDataBtn").addEventListener("click", getVideoData);
-    document.getElementById("srcBtn").addEventListener("click", showIframeSrc);
-    document.getElementById("referrerPolicyBtn").addEventListener("click", showIframeReferrerPolicy);
-
-    document.getElementById("playBtn").addEventListener("click", playVideo);
-    document.getElementById("pauseBtn").addEventListener("click", pauseVideo);
-    document.getElementById("muteBtn").addEventListener("click", muteVideo);
-    document.getElementById("unmuteBtn").addEventListener("click", unmuteVideo);
-    document.getElementById("seekBtn").addEventListener("click", seekForward);
-    document.getElementById("volumeBtn").addEventListener("click", setVolumeHalf);
-
-    document.getElementById("roundedBtn").addEventListener("click", function () {
-      toggleClass("rounded");
-    });
-
-    document.getElementById("cinemaBtn").addEventListener("click", function () {
-      toggleClass("cinema");
-    });
-
-    document.getElementById("vividBtn").addEventListener("click", function () {
-      playerShell.classList.remove("dark");
-      toggleClass("vivid");
-    });
-
-    document.getElementById("darkBtn").addEventListener("click", function () {
-      playerShell.classList.remove("vivid");
-      toggleClass("dark");
-    });
-
-    document.getElementById("floatBtn").addEventListener("click", function () {
-      toggleClass("floaty");
-    });
-
-    document.getElementById("resetStyleBtn").addEventListener("click", resetStyles);
-
-    document.getElementById("fullscreenBtn").addEventListener("click", fullscreenIframe);
-    document.getElementById("docPipBtn").addEventListener("click", openDocumentPip);
-    document.getElementById("allowBtn").addEventListener("click", setUsefulIframePermissions);
-
-    setControlsFromCurrentConfig();
-    updateConfigBox();
-    markActivePresetButtons();
-  </script>
-
+  });
+</script>
 </body>
 </html>
