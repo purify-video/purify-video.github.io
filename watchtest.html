@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Watch</title>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-99VF2EXKRN"></script>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('v') || '';
+
+    if (/^[a-zA-Z0-9_-]{11}$/.test(v)) {
+      document.title = v;
+
+      window.location.replace(
+        'https://www.youtube-nocookie.com/embed/' +
+        encodeURIComponent(v) +
+        '?playlist=' +
+        encodeURIComponent(v) +
+        '&autoplay=1&iv_load_policy=3&loop=1&start='
+      );
+    } else {
+      document.body.textContent = 'Invalid or missing video ID';
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>
