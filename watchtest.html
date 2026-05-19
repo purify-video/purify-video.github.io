@@ -1,303 +1,213 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="origin-when-cross-origin">
-  <title>YT API diagnostic test</title>
+  <title>Custom-protocol shell test</title>
   <style>
     body { margin: 0; padding: 20px; background: #111; color: #eee; font-family: Arial, sans-serif; }
     .wrap { max-width: 1100px; margin: 0 auto; }
-    h1 { font-size: 20px; margin: 0 0 12px; }
-    h2 { font-size: 14px; margin: 12px 0 6px; color: #9cf; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 14px; color: #9cf; margin: 12px 0 6px; }
     .box { background: #1c1c1c; border: 1px solid #333; border-radius: 8px; padding: 12px; margin: 12px 0; }
     .player-wrap { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
-    input[type=text] { flex: 1; min-width: 250px; padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    iframe { width: 100%; height: 100%; border: 0; }
+    input { padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; font-family: monospace; font-size: 12px; min-width: 220px; }
     button { padding: 6px 10px; background: #2a6; border: 0; color: #fff; border-radius: 4px; cursor: pointer; margin: 2px; font-size: 12px; }
     button:hover { background: #3b7; }
-    button.alt { background: #46aae9; }
-    button.warn { background: #c63; }
     .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    code { background: #292929; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
-    .small { color: #888; font-size: 11px; }
-    .logs {
-      background: #0a0a0a;
-      border: 1px solid #333;
-      border-radius: 6px;
-      padding: 8px;
-      max-height: 300px;
-      overflow: auto;
-      font-family: monospace;
-      font-size: 11px;
-      white-space: pre-wrap;
-      line-height: 1.4;
-    }
-    .log-line { margin-bottom: 2px; }
-    .log-in { color: #6f6; }
-    .log-out { color: #fc6; }
-    .log-event { color: #9cf; }
-    .log-error { color: #f66; }
+    .logs { background: #0a0a0a; border: 1px solid #333; border-radius: 6px; padding: 8px; max-height: 280px; overflow: auto; font-family: monospace; font-size: 11px; white-space: pre-wrap; }
     .log-info { color: #ccc; }
+    .log-event { color: #9cf; }
+    .log-good { color: #6f6; }
+    .log-bad { color: #f66; }
     .stat { display: inline-block; padding: 2px 8px; background: #2a2a2a; border-radius: 3px; margin-right: 6px; font-size: 11px; }
     .stat.good { background: #163; }
-    .stat.bad { background: #611; }
+    code { background: #292929; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h1>YT IFrame API — postMessage diagnostic</h1>
-  <p class="small">
-    Logs every postMessage between parent and shell. Open this AND the shell iframe's console (right-click player → Inspect → switch to shell context) to see both sides of the relay.
-  </p>
+  <h1>Custom-protocol shell test</h1>
 
   <div class="box">
     <div class="row">
-      <span>Shell:</span>
+      <span>Shell base:</span>
       <input id="hostInput" type="text" value="https://purifyvideo.com">
       <span>Video:</span>
       <input id="videoInput" type="text" value="dQw4w9WgXcQ" style="min-width: 130px;">
-      <button onclick="initPlayer()">Initialize</button>
-      <button class="warn" onclick="destroyPlayer()">Destroy</button>
-      <button onclick="clearAll()">Clear</button>
+      <button onclick="load()">Load</button>
     </div>
   </div>
 
   <div class="box">
     <h2>Status</h2>
-    <div id="status">
-      <span class="stat" id="stat-construct">construct: -</span>
-      <span class="stat" id="stat-onready">onReady: -</span>
-      <span class="stat" id="stat-statechange">onStateChange: -</span>
-      <span class="stat" id="stat-msgin">msgs from shell: 0</span>
-      <span class="stat" id="stat-msgout">msgs to shell: 0</span>
-    </div>
+    <span class="stat" id="stat-ready">ready: -</span>
+    <span class="stat" id="stat-state">state: -</span>
+    <span class="stat" id="stat-time">time: -</span>
+    <span class="stat" id="stat-duration">duration: -</span>
   </div>
 
   <div class="box">
-    <div class="player-wrap" id="playerHolder">
-      <div id="player"></div>
+    <div class="player-wrap">
+      <iframe id="shellFrame"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen *"
+              referrerpolicy="origin-when-cross-origin"
+              allowfullscreen></iframe>
     </div>
   </div>
 
   <div class="box">
     <h2>Controls</h2>
     <div class="row">
-      <button onclick="tryCall('playVideo')">play</button>
-      <button onclick="tryCall('pauseVideo')">pause</button>
-      <button onclick="tryCall('mute')">mute</button>
-      <button onclick="tryCall('unMute')">unMute</button>
-      <button class="alt" onclick="inspectPlayer()">inspect player object</button>
+      <button onclick="cmd('play')">play</button>
+      <button onclick="cmd('pause')">pause</button>
+      <button onclick="cmd('stop')">stop</button>
+      <button onclick="cmd('mute')">mute</button>
+      <button onclick="cmd('unMute')">unmute</button>
+      <button onclick="cmd('seekTo', {seconds: 30, allowSeekAhead: true})">seek 30s</button>
+      <button onclick="cmd('setVolume', {volume: 50})">vol 50</button>
+      <button onclick="cmd('setPlaybackRate', {rate: 1.5})">rate 1.5x</button>
+      <button onclick="get('getCurrentTime')">getCurrentTime</button>
+      <button onclick="get('getDuration')">getDuration</button>
+      <button onclick="get('getPlayerState')">getPlayerState</button>
+      <button onclick="get('getVideoData')">getVideoData</button>
     </div>
   </div>
 
   <div class="box">
-    <h2>postMessage log (parent side)</h2>
-    <div class="small">Green = from shell (incoming), Orange = to shell (outgoing — these are sent automatically by the YT API), Blue = YT player event</div>
-    <div id="msgLog" class="logs"></div>
-  </div>
-
-  <div class="box">
-    <h2>Test log</h2>
-    <div id="testLog" class="logs"></div>
+    <h2>Log</h2>
+    <div id="log" class="logs"></div>
   </div>
 
 </div>
 
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-  var player = null;
-  var ytReady = false;
-  var msgsIn = 0;
-  var msgsOut = 0;
-  var shellHost = '';
+  var shellOrigin = '';
+  var nextRequestId = 1;
+  var pendingRequests = {};
+  var pollInterval = null;
 
-  // Intercept all postMessage calls on the parent side so we can see what YT API sends.
-  var originalPostMessage = window.postMessage;
-  function logOutgoing(targetWindow, data, targetOrigin) {
-    msgsOut++;
-    document.getElementById('stat-msgout').textContent = 'msgs to shell: ' + msgsOut;
-    logMsg(typeof data === 'string' ? data : JSON.stringify(data), 'out');
-  }
-
-  // Hook the iframe's contentWindow.postMessage when we know about it.
-  function hookIframePostMessage(iframe) {
-    try {
-      if (!iframe || !iframe.contentWindow) return;
-      var cw = iframe.contentWindow;
-      var orig = cw.postMessage.bind(cw);
-      cw.postMessage = function (data, targetOrigin) {
-        logOutgoing(cw, data, targetOrigin);
-        return orig(data, targetOrigin);
-      };
-      testLog('Hooked iframe.contentWindow.postMessage', 'info');
-    } catch (e) {
-      testLog('Could not hook iframe postMessage: ' + e.message, 'error');
-    }
-  }
-
-  // Listen for all incoming messages.
-  window.addEventListener('message', function (event) {
-    // Only count messages from our shell domain.
-    if (shellHost && event.origin === shellHost) {
-      msgsIn++;
-      document.getElementById('stat-msgin').textContent = 'msgs from shell: ' + msgsIn;
-      logMsg(typeof event.data === 'string' ? event.data : JSON.stringify(event.data), 'in', event.origin);
-    } else {
-      // Other messages — log briefly for completeness.
-      logMsg(
-        (typeof event.data === 'string' ? event.data : JSON.stringify(event.data)).slice(0, 60) + ' [from ' + event.origin + ']',
-        'info'
-      );
-    }
-  });
-
-  function logMsg(data, dir, origin) {
-    var el = document.getElementById('msgLog');
+  function log(msg, cls) {
+    var el = document.getElementById('log');
     var div = document.createElement('div');
-    div.className = 'log-line log-' + dir;
-    var prefix = dir === 'in' ? '← ' : (dir === 'out' ? '→ ' : '  ');
-    var time = new Date().toLocaleTimeString();
-    var str = String(data);
-    if (str.length > 200) str = str.slice(0, 200) + '...';
-    div.textContent = '[' + time + '] ' + prefix + str + (origin ? ' [' + origin + ']' : '');
-    el.appendChild(div);
-    el.scrollTop = el.scrollHeight;
-  }
-
-  function testLog(msg, cls) {
-    var el = document.getElementById('testLog');
-    var div = document.createElement('div');
-    div.className = 'log-line log-' + (cls || 'info');
+    div.className = 'log-' + (cls || 'info');
     div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
     el.appendChild(div);
     el.scrollTop = el.scrollHeight;
   }
 
-  function setStat(name, val, good) {
-    var el = document.getElementById('stat-' + name);
-    el.textContent = name + ': ' + val;
-    el.className = 'stat ' + (good === true ? 'good' : (good === false ? 'bad' : ''));
+  function setStat(id, val, good) {
+    var el = document.getElementById('stat-' + id);
+    el.textContent = id + ': ' + val;
+    if (good) el.className = 'stat good';
   }
 
-  function onYouTubeIframeAPIReady() {
-    ytReady = true;
-    testLog('YT IFrame API loaded', 'info');
-  }
-
-  function initPlayer() {
-    if (!ytReady) {
-      testLog('YT API not ready', 'error');
-      return;
-    }
-
-    destroyPlayer();
-
+  function load() {
     var host = document.getElementById('hostInput').value.trim();
     var videoId = document.getElementById('videoInput').value.trim();
 
     if (!host || !videoId) return;
 
-    shellHost = host;
-    msgsIn = 0;
-    msgsOut = 0;
-    setStat('msgin', '0', false);
-    setStat('msgout', '0', false);
-    setStat('onready', 'waiting', false);
-    setStat('statechange', 'waiting', false);
+    shellOrigin = host;
 
-    testLog('Creating YT.Player with host=' + host + ' videoId=' + videoId, 'info');
+    // Stop any previous polling.
+    if (pollInterval) clearInterval(pollInterval);
 
-    try {
-      player = new YT.Player('player', {
-        host: host,
-        width: '100%',
-        height: '100%',
-        videoId: videoId,
-        playerVars: {
-          playsinline: 1,
-          rel: 0,
-          enablejsapi: 1
-        },
-        events: {
-          onReady: function (e) {
-            testLog('onReady fired', 'event');
-            setStat('onready', 'fired', true);
-            // Hook the iframe's postMessage now that we have it.
-            hookIframePostMessage(e.target.getIframe());
-          },
-          onStateChange: function (e) {
-            testLog('onStateChange: ' + stateName(e.data), 'event');
-            setStat('statechange', stateName(e.data), true);
-          },
-          onError: function (e) {
-            testLog('onError code=' + e.data, 'error');
-          },
-          onApiChange: function () {
-            testLog('onApiChange', 'event');
-          }
-        }
-      });
-      setStat('construct', 'OK', true);
-      testLog('YT.Player constructor returned', 'info');
+    setStat('ready', 'loading');
+    setStat('state', '-');
 
-      // Try to hook the iframe ASAP (it may not be in the DOM yet, retry).
-      setTimeout(function tryHook() {
-        var iframe = document.getElementById('player');
-        if (iframe && iframe.tagName === 'IFRAME') {
-          hookIframePostMessage(iframe);
-        } else {
-          setTimeout(tryHook, 100);
-        }
-      }, 100);
-    } catch (err) {
-      testLog('Constructor threw: ' + err.message, 'error');
-      setStat('construct', 'threw', false);
-    }
+    // Build the shell URL with player vars baked into the query.
+    var params = new URLSearchParams();
+    params.set('parentOrigin', window.location.origin);
+    params.set('playsinline', '1');
+    params.set('rel', '0');
+
+    var src = host + '/embed/' + encodeURIComponent(videoId) + '?' + params.toString();
+    log('Loading shell: ' + src);
+
+    document.getElementById('shellFrame').src = src;
   }
 
-  function destroyPlayer() {
-    if (player && typeof player.destroy === 'function') {
-      try { player.destroy(); } catch (e) {}
-      testLog('destroyed', 'info');
-    }
-    player = null;
-    document.getElementById('playerHolder').innerHTML = '<div id="player"></div>';
+  // Send a command to the shell.
+  function cmd(action, extra) {
+    var iframe = document.getElementById('shellFrame');
+    if (!iframe.contentWindow) { log('iframe not ready', 'bad'); return; }
+
+    var msg = Object.assign({ action: action }, extra || {});
+    iframe.contentWindow.postMessage(msg, shellOrigin || '*');
+    log('→ ' + action + (extra ? ' ' + JSON.stringify(extra) : ''));
   }
 
-  function tryCall(method) {
-    if (!player) { testLog('no player', 'error'); return; }
-    try {
-      player[method]();
-      testLog('called ' + method + '() OK', 'event');
-    } catch (err) {
-      testLog('called ' + method + '() threw: ' + err.message, 'error');
-    }
-  }
+  // Get a property value via the shell (async).
+  function get(property) {
+    var iframe = document.getElementById('shellFrame');
+    if (!iframe.contentWindow) { log('iframe not ready', 'bad'); return; }
 
-  function inspectPlayer() {
-    if (!player) { testLog('no player', 'error'); return; }
-    var props = [];
-    for (var k in player) {
-      var t = typeof player[k];
-      props.push(k + ' (' + t + ')');
-    }
-    testLog('player object properties:', 'info');
-    testLog(props.join(', '), 'info');
-    testLog('player.playVideo = ' + typeof player.playVideo, 'info');
-    testLog('player.a (internal) = ' + typeof player.a, 'info');
-    testLog('player.b (internal) = ' + typeof player.b, 'info');
+    var requestId = nextRequestId++;
+    pendingRequests[requestId] = property;
+
+    iframe.contentWindow.postMessage(
+      { action: 'get', property: property, requestId: requestId },
+      shellOrigin || '*'
+    );
+    log('→ get ' + property);
   }
 
   function stateName(s) {
-    if (!window.YT) return s;
     return {0:'ENDED',1:'PLAYING',2:'PAUSED',3:'BUFFERING',5:'CUED','-1':'UNSTARTED'}[s] || s;
   }
 
-  function clearAll() {
-    document.getElementById('msgLog').innerHTML = '';
-    document.getElementById('testLog').innerHTML = '';
-  }
+  // Listen for messages from the shell.
+  window.addEventListener('message', function (event) {
+    // Filter to expected shell origin.
+    if (shellOrigin && event.origin !== shellOrigin) return;
+    if (!event.data || typeof event.data !== 'object') return;
+
+    var data = event.data;
+
+    if (data.event === 'ready') {
+      log('← ready', 'good');
+      setStat('ready', 'YES', true);
+      // Start polling for current time.
+      pollInterval = setInterval(function () {
+        get('getCurrentTime');
+        get('getDuration');
+      }, 1000);
+      return;
+    }
+
+    if (data.event === 'stateChange') {
+      log('← stateChange: ' + stateName(data.state), 'event');
+      setStat('state', stateName(data.state), true);
+      return;
+    }
+
+    if (data.event === 'response') {
+      var prop = data.property;
+      var val = data.value;
+      delete pendingRequests[data.requestId];
+
+      // Update stats for known properties.
+      if (prop === 'getCurrentTime' && typeof val === 'number') {
+        setStat('time', Math.round(val) + 's', true);
+      } else if (prop === 'getDuration' && typeof val === 'number') {
+        setStat('duration', Math.round(val) + 's', true);
+      } else {
+        log('← ' + prop + ' = ' + JSON.stringify(val), 'good');
+      }
+      return;
+    }
+
+    if (data.event === 'error') {
+      log('← error: ' + (data.code || data.message), 'bad');
+      return;
+    }
+
+    log('← ' + JSON.stringify(data), 'info');
+  });
 </script>
 </body>
 </html>
