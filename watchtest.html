@@ -4,118 +4,73 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="origin-when-cross-origin">
-  <title>YT IFrame API host-rotation test</title>
+  <title>YT API diagnostic test</title>
   <style>
-    body {
-      margin: 0;
-      padding: 20px;
-      background: #111;
-      color: #eee;
-      font-family: Arial, sans-serif;
-    }
+    body { margin: 0; padding: 20px; background: #111; color: #eee; font-family: Arial, sans-serif; }
     .wrap { max-width: 1100px; margin: 0 auto; }
-    h1 { font-size: 22px; margin: 0 0 8px; }
-    h2 { font-size: 16px; margin: 16px 0 8px; }
-    .box {
-      background: #1c1c1c;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 12px;
-      margin: 12px 0;
-    }
-    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-    .player-wrap {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    input[type=text] {
-      flex: 1;
-      min-width: 280px;
-      padding: 8px;
-      background: #222;
-      color: #fff;
-      border: 1px solid #444;
-      border-radius: 4px;
-      font-family: monospace;
-    }
-    button {
-      padding: 8px 12px;
-      background: #2a6;
-      border: 0;
-      color: #fff;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-    }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    h2 { font-size: 14px; margin: 12px 0 6px; color: #9cf; }
+    .box { background: #1c1c1c; border: 1px solid #333; border-radius: 8px; padding: 12px; margin: 12px 0; }
+    .player-wrap { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 8px; overflow: hidden; }
+    input[type=text] { flex: 1; min-width: 250px; padding: 6px; background: #222; color: #fff; border: 1px solid #444; border-radius: 4px; font-family: monospace; font-size: 12px; }
+    button { padding: 6px 10px; background: #2a6; border: 0; color: #fff; border-radius: 4px; cursor: pointer; margin: 2px; font-size: 12px; }
     button:hover { background: #3b7; }
     button.alt { background: #46aae9; }
-    button.alt:hover { background: #57bbf0; }
     button.warn { background: #c63; }
-    code {
-      background: #292929;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 13px;
-    }
-    #log {
+    .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    code { background: #292929; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+    .small { color: #888; font-size: 11px; }
+    .logs {
       background: #0a0a0a;
       border: 1px solid #333;
       border-radius: 6px;
-      padding: 10px;
-      max-height: 400px;
+      padding: 8px;
+      max-height: 300px;
       overflow: auto;
       font-family: monospace;
-      font-size: 12px;
+      font-size: 11px;
       white-space: pre-wrap;
-      line-height: 1.5;
+      line-height: 1.4;
     }
-    .pass { color: #6f6; }
-    .fail { color: #f66; }
-    .info { color: #9cf; }
-    .warn-text { color: #fc6; }
-    .results-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    .results-table td {
-      padding: 4px 8px;
-      border-bottom: 1px solid #2a2a2a;
-    }
-    .results-table td:first-child {
-      font-family: monospace;
-      color: #9cf;
-      width: 220px;
-    }
-    .small { color: #999; font-size: 12px; }
+    .log-line { margin-bottom: 2px; }
+    .log-in { color: #6f6; }
+    .log-out { color: #fc6; }
+    .log-event { color: #9cf; }
+    .log-error { color: #f66; }
+    .log-info { color: #ccc; }
+    .stat { display: inline-block; padding: 2px 8px; background: #2a2a2a; border-radius: 3px; margin-right: 6px; font-size: 11px; }
+    .stat.good { background: #163; }
+    .stat.bad { background: #611; }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <h1>YouTube IFrame API — host-rotation test</h1>
+  <h1>YT IFrame API — postMessage diagnostic</h1>
   <p class="small">
-    Verifies that <code>YT.Player</code> with the undocumented <code>host</code> parameter still surfaces every API method and event when the iframe is proxied through a shell domain.
+    Logs every postMessage between parent and shell. Open this AND the shell iframe's console (right-click player → Inspect → switch to shell context) to see both sides of the relay.
   </p>
 
   <div class="box">
     <div class="row">
-      <span>Shell host URL:</span>
+      <span>Shell:</span>
       <input id="hostInput" type="text" value="https://purifyvideo.com">
-      <span>Video ID:</span>
-      <input id="videoInput" type="text" value="dQw4w9WgXcQ" style="min-width: 140px;">
-    </div>
-    <p class="small">
-      Set the shell host to wherever you deployed <code>shell.html</code> (rename it to <code>embed/index.html</code> on that host, or configure routing so <code>/embed/VIDEOID</code> serves the shell). Then click Initialize.
-    </p>
-    <div class="row" style="margin-top: 8px;">
-      <button onclick="initPlayer()">Initialize player</button>
-      <button class="alt" onclick="runAllTests()">Run all API tests</button>
+      <span>Video:</span>
+      <input id="videoInput" type="text" value="dQw4w9WgXcQ" style="min-width: 130px;">
+      <button onclick="initPlayer()">Initialize</button>
       <button class="warn" onclick="destroyPlayer()">Destroy</button>
-      <button onclick="clearLog()">Clear log</button>
+      <button onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <h2>Status</h2>
+    <div id="status">
+      <span class="stat" id="stat-construct">construct: -</span>
+      <span class="stat" id="stat-onready">onReady: -</span>
+      <span class="stat" id="stat-statechange">onStateChange: -</span>
+      <span class="stat" id="stat-msgin">msgs from shell: 0</span>
+      <span class="stat" id="stat-msgout">msgs to shell: 0</span>
     </div>
   </div>
 
@@ -126,36 +81,25 @@
   </div>
 
   <div class="box">
-    <h2>Manual API exercises</h2>
+    <h2>Controls</h2>
     <div class="row">
-      <button onclick="testCall('playVideo')">play</button>
-      <button onclick="testCall('pauseVideo')">pause</button>
-      <button onclick="testCall('stopVideo')">stop</button>
-      <button onclick="testCall('mute')">mute</button>
-      <button onclick="testCall('unMute')">unMute</button>
-      <button onclick="testCall('seekTo', 30, true)">seekTo(30)</button>
-      <button onclick="testCall('setVolume', 50)">setVolume(50)</button>
-      <button onclick="testGetter('getCurrentTime')">getCurrentTime</button>
-      <button onclick="testGetter('getDuration')">getDuration</button>
-      <button onclick="testGetter('getPlayerState')">getPlayerState</button>
-      <button onclick="testGetter('getVideoData')">getVideoData</button>
-      <button onclick="testGetter('getVideoUrl')">getVideoUrl</button>
-      <button onclick="testGetter('getVideoLoadedFraction')">getVideoLoadedFraction</button>
-      <button onclick="testGetter('getPlaybackRate')">getPlaybackRate</button>
-      <button onclick="testGetter('isMuted')">isMuted</button>
-      <button onclick="testGetter('getVolume')">getVolume</button>
-      <button onclick="testGetIframe()">getIframe()</button>
+      <button onclick="tryCall('playVideo')">play</button>
+      <button onclick="tryCall('pauseVideo')">pause</button>
+      <button onclick="tryCall('mute')">mute</button>
+      <button onclick="tryCall('unMute')">unMute</button>
+      <button class="alt" onclick="inspectPlayer()">inspect player object</button>
     </div>
   </div>
 
   <div class="box">
-    <h2>Test results</h2>
-    <table class="results-table" id="resultsTable"><tbody></tbody></table>
+    <h2>postMessage log (parent side)</h2>
+    <div class="small">Green = from shell (incoming), Orange = to shell (outgoing — these are sent automatically by the YT API), Blue = YT player event</div>
+    <div id="msgLog" class="logs"></div>
   </div>
 
   <div class="box">
-    <h2>Event log</h2>
-    <div id="log"></div>
+    <h2>Test log</h2>
+    <div id="testLog" class="logs"></div>
   </div>
 
 </div>
@@ -164,58 +108,86 @@
 <script>
   var player = null;
   var ytReady = false;
-  var results = {};
-  var eventsFired = {
-    onReady: false,
-    onStateChange: false,
-    onPlaybackQualityChange: false,
-    onPlaybackRateChange: false,
-    onError: false,
-    onApiChange: false
-  };
+  var msgsIn = 0;
+  var msgsOut = 0;
+  var shellHost = '';
 
-  function log(msg, cls) {
+  // Intercept all postMessage calls on the parent side so we can see what YT API sends.
+  var originalPostMessage = window.postMessage;
+  function logOutgoing(targetWindow, data, targetOrigin) {
+    msgsOut++;
+    document.getElementById('stat-msgout').textContent = 'msgs to shell: ' + msgsOut;
+    logMsg(typeof data === 'string' ? data : JSON.stringify(data), 'out');
+  }
+
+  // Hook the iframe's contentWindow.postMessage when we know about it.
+  function hookIframePostMessage(iframe) {
+    try {
+      if (!iframe || !iframe.contentWindow) return;
+      var cw = iframe.contentWindow;
+      var orig = cw.postMessage.bind(cw);
+      cw.postMessage = function (data, targetOrigin) {
+        logOutgoing(cw, data, targetOrigin);
+        return orig(data, targetOrigin);
+      };
+      testLog('Hooked iframe.contentWindow.postMessage', 'info');
+    } catch (e) {
+      testLog('Could not hook iframe postMessage: ' + e.message, 'error');
+    }
+  }
+
+  // Listen for all incoming messages.
+  window.addEventListener('message', function (event) {
+    // Only count messages from our shell domain.
+    if (shellHost && event.origin === shellHost) {
+      msgsIn++;
+      document.getElementById('stat-msgin').textContent = 'msgs from shell: ' + msgsIn;
+      logMsg(typeof event.data === 'string' ? event.data : JSON.stringify(event.data), 'in', event.origin);
+    } else {
+      // Other messages — log briefly for completeness.
+      logMsg(
+        (typeof event.data === 'string' ? event.data : JSON.stringify(event.data)).slice(0, 60) + ' [from ' + event.origin + ']',
+        'info'
+      );
+    }
+  });
+
+  function logMsg(data, dir, origin) {
+    var el = document.getElementById('msgLog');
     var div = document.createElement('div');
-    div.className = cls || '';
-    var t = new Date().toLocaleTimeString();
-    div.textContent = '[' + t + '] ' + msg;
-    var el = document.getElementById('log');
+    div.className = 'log-line log-' + dir;
+    var prefix = dir === 'in' ? '← ' : (dir === 'out' ? '→ ' : '  ');
+    var time = new Date().toLocaleTimeString();
+    var str = String(data);
+    if (str.length > 200) str = str.slice(0, 200) + '...';
+    div.textContent = '[' + time + '] ' + prefix + str + (origin ? ' [' + origin + ']' : '');
     el.appendChild(div);
     el.scrollTop = el.scrollHeight;
   }
 
-  function clearLog() {
-    document.getElementById('log').innerHTML = '';
-    document.querySelector('#resultsTable tbody').innerHTML = '';
-    results = {};
+  function testLog(msg, cls) {
+    var el = document.getElementById('testLog');
+    var div = document.createElement('div');
+    div.className = 'log-line log-' + (cls || 'info');
+    div.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
   }
 
-  function recordResult(name, passed, detail) {
-    results[name] = { passed: passed, detail: detail };
-    renderResults();
-  }
-
-  function renderResults() {
-    var tbody = document.querySelector('#resultsTable tbody');
-    tbody.innerHTML = '';
-    Object.keys(results).forEach(function (key) {
-      var r = results[key];
-      var tr = document.createElement('tr');
-      var status = r.passed ? '<span class="pass">PASS</span>' : '<span class="fail">FAIL</span>';
-      var detail = r.detail !== undefined ? ' — ' + r.detail : '';
-      tr.innerHTML = '<td>' + key + '</td><td>' + status + detail + '</td>';
-      tbody.appendChild(tr);
-    });
+  function setStat(name, val, good) {
+    var el = document.getElementById('stat-' + name);
+    el.textContent = name + ': ' + val;
+    el.className = 'stat ' + (good === true ? 'good' : (good === false ? 'bad' : ''));
   }
 
   function onYouTubeIframeAPIReady() {
     ytReady = true;
-    log('YT IFrame API loaded', 'info');
+    testLog('YT IFrame API loaded', 'info');
   }
 
   function initPlayer() {
     if (!ytReady) {
-      log('YT API not ready yet — wait a moment and try again', 'warn-text');
+      testLog('YT API not ready', 'error');
       return;
     }
 
@@ -224,15 +196,17 @@
     var host = document.getElementById('hostInput').value.trim();
     var videoId = document.getElementById('videoInput').value.trim();
 
-    if (!host || !videoId) {
-      log('Both host and videoId are required', 'fail');
-      return;
-    }
+    if (!host || !videoId) return;
 
-    log('Creating YT.Player with host=' + host + ' videoId=' + videoId, 'info');
+    shellHost = host;
+    msgsIn = 0;
+    msgsOut = 0;
+    setStat('msgin', '0', false);
+    setStat('msgout', '0', false);
+    setStat('onready', 'waiting', false);
+    setStat('statechange', 'waiting', false);
 
-    // Reset event-fired tracking
-    Object.keys(eventsFired).forEach(function (k) { eventsFired[k] = false; });
+    testLog('Creating YT.Player with host=' + host + ' videoId=' + videoId, 'info');
 
     try {
       player = new YT.Player('player', {
@@ -247,181 +221,82 @@
         },
         events: {
           onReady: function (e) {
-            eventsFired.onReady = true;
-            recordResult('event: onReady', true, 'fired');
-            log('onReady fired', 'pass');
-            // Inspect the iframe the API created
-            var iframe = e.target.getIframe();
-            log('iframe.src = ' + iframe.src, 'info');
-            var srcHostMatch = iframe.src.indexOf(host) === 0;
-            recordResult('iframe.src points at shell host', srcHostMatch,
-              srcHostMatch ? 'correct' : 'WRONG: ' + iframe.src);
+            testLog('onReady fired', 'event');
+            setStat('onready', 'fired', true);
+            // Hook the iframe's postMessage now that we have it.
+            hookIframePostMessage(e.target.getIframe());
           },
           onStateChange: function (e) {
-            eventsFired.onStateChange = true;
-            var name = stateName(e.data);
-            log('onStateChange: ' + name + ' (' + e.data + ')', 'pass');
-            if (!results['event: onStateChange']) {
-              recordResult('event: onStateChange', true, 'fired with state=' + name);
-            }
-          },
-          onPlaybackQualityChange: function (e) {
-            eventsFired.onPlaybackQualityChange = true;
-            log('onPlaybackQualityChange: ' + e.data, 'pass');
-            recordResult('event: onPlaybackQualityChange', true, 'quality=' + e.data);
-          },
-          onPlaybackRateChange: function (e) {
-            eventsFired.onPlaybackRateChange = true;
-            log('onPlaybackRateChange: ' + e.data, 'pass');
-            recordResult('event: onPlaybackRateChange', true, 'rate=' + e.data);
+            testLog('onStateChange: ' + stateName(e.data), 'event');
+            setStat('statechange', stateName(e.data), true);
           },
           onError: function (e) {
-            eventsFired.onError = true;
-            log('onError: code=' + e.data, 'fail');
-            recordResult('event: onError', false, 'code=' + e.data + ' (' + errorMeaning(e.data) + ')');
+            testLog('onError code=' + e.data, 'error');
           },
           onApiChange: function () {
-            eventsFired.onApiChange = true;
-            log('onApiChange fired', 'pass');
-            recordResult('event: onApiChange', true, 'fired');
+            testLog('onApiChange', 'event');
           }
         }
       });
-      log('YT.Player constructor returned without throwing', 'pass');
-      recordResult('YT.Player construction', true, 'no exception');
+      setStat('construct', 'OK', true);
+      testLog('YT.Player constructor returned', 'info');
+
+      // Try to hook the iframe ASAP (it may not be in the DOM yet, retry).
+      setTimeout(function tryHook() {
+        var iframe = document.getElementById('player');
+        if (iframe && iframe.tagName === 'IFRAME') {
+          hookIframePostMessage(iframe);
+        } else {
+          setTimeout(tryHook, 100);
+        }
+      }, 100);
     } catch (err) {
-      log('YT.Player constructor threw: ' + err.message, 'fail');
-      recordResult('YT.Player construction', false, err.message);
+      testLog('Constructor threw: ' + err.message, 'error');
+      setStat('construct', 'threw', false);
     }
   }
 
   function destroyPlayer() {
     if (player && typeof player.destroy === 'function') {
       try { player.destroy(); } catch (e) {}
-      log('Player destroyed', 'info');
+      testLog('destroyed', 'info');
     }
     player = null;
     document.getElementById('playerHolder').innerHTML = '<div id="player"></div>';
   }
 
-  function stateName(state) {
-    if (!window.YT || !YT.PlayerState) return String(state);
-    var map = {};
-    map[YT.PlayerState.UNSTARTED] = 'UNSTARTED';
-    map[YT.PlayerState.ENDED] = 'ENDED';
-    map[YT.PlayerState.PLAYING] = 'PLAYING';
-    map[YT.PlayerState.PAUSED] = 'PAUSED';
-    map[YT.PlayerState.BUFFERING] = 'BUFFERING';
-    map[YT.PlayerState.CUED] = 'CUED';
-    return map[state] || String(state);
-  }
-
-  function errorMeaning(code) {
-    var map = {
-      2: 'invalid parameter',
-      5: 'HTML5 player issue',
-      100: 'video not found',
-      101: 'embedding disabled',
-      150: 'embedding disabled',
-      153: 'referrer/origin rejected'
-    };
-    return map[code] || 'unknown';
-  }
-
-  function testCall(method) {
-    if (!player) { log('No player', 'fail'); return; }
-    var args = Array.prototype.slice.call(arguments, 1);
+  function tryCall(method) {
+    if (!player) { testLog('no player', 'error'); return; }
     try {
-      var result = player[method].apply(player, args);
-      log('call ' + method + '(' + args.join(', ') + ') OK', 'pass');
-      recordResult('method: ' + method, true,
-        result !== undefined ? 'returned ' + JSON.stringify(result).slice(0, 60) : 'void');
+      player[method]();
+      testLog('called ' + method + '() OK', 'event');
     } catch (err) {
-      log('call ' + method + ' threw: ' + err.message, 'fail');
-      recordResult('method: ' + method, false, err.message);
+      testLog('called ' + method + '() threw: ' + err.message, 'error');
     }
   }
 
-  function testGetter(method) {
-    if (!player) { log('No player', 'fail'); return; }
-    try {
-      var result = player[method]();
-      var display = typeof result === 'object'
-        ? JSON.stringify(result).slice(0, 100)
-        : String(result);
-      log(method + '() = ' + display, 'info');
-      recordResult('getter: ' + method, true, display);
-    } catch (err) {
-      log(method + '() threw: ' + err.message, 'fail');
-      recordResult('getter: ' + method, false, err.message);
+  function inspectPlayer() {
+    if (!player) { testLog('no player', 'error'); return; }
+    var props = [];
+    for (var k in player) {
+      var t = typeof player[k];
+      props.push(k + ' (' + t + ')');
     }
+    testLog('player object properties:', 'info');
+    testLog(props.join(', '), 'info');
+    testLog('player.playVideo = ' + typeof player.playVideo, 'info');
+    testLog('player.a (internal) = ' + typeof player.a, 'info');
+    testLog('player.b (internal) = ' + typeof player.b, 'info');
   }
 
-  function testGetIframe() {
-    if (!player) { log('No player', 'fail'); return; }
-    try {
-      var iframe = player.getIframe();
-      var ok = iframe && iframe.tagName === 'IFRAME';
-      var info = 'tag=' + (iframe ? iframe.tagName : 'null') +
-        ', src=' + (iframe ? iframe.src.slice(0, 80) : 'null');
-      log('getIframe(): ' + info, ok ? 'pass' : 'fail');
-      recordResult('getter: getIframe', ok, info);
-    } catch (err) {
-      log('getIframe threw: ' + err.message, 'fail');
-      recordResult('getter: getIframe', false, err.message);
-    }
+  function stateName(s) {
+    if (!window.YT) return s;
+    return {0:'ENDED',1:'PLAYING',2:'PAUSED',3:'BUFFERING',5:'CUED','-1':'UNSTARTED'}[s] || s;
   }
 
-  function runAllTests() {
-    if (!player) {
-      log('Initialize player first', 'warn-text');
-      return;
-    }
-    log('=== Running automated test suite ===', 'info');
-
-    // Wait for player to be ready before testing.
-    function nextWhenReady(fn) {
-      if (eventsFired.onReady) { fn(); return; }
-      log('Waiting for onReady...', 'info');
-      var attempts = 0;
-      var iv = setInterval(function () {
-        attempts++;
-        if (eventsFired.onReady) { clearInterval(iv); fn(); }
-        if (attempts > 50) { clearInterval(iv); log('onReady never fired — aborting', 'fail'); }
-      }, 200);
-    }
-
-    nextWhenReady(function () {
-      // Test all getters first (synchronous, safe).
-      var getters = [
-        'getDuration', 'getCurrentTime', 'getPlayerState',
-        'getVideoData', 'getVideoUrl', 'getVideoEmbedCode',
-        'getVideoLoadedFraction', 'getPlaybackRate',
-        'getAvailablePlaybackRates', 'getVolume', 'isMuted',
-        'getAvailableQualityLevels', 'getPlaybackQuality'
-      ];
-      getters.forEach(testGetter);
-      testGetIframe();
-
-      // Test playback methods (these will trigger state-change events).
-      setTimeout(function () { testCall('playVideo'); }, 200);
-      setTimeout(function () { testCall('pauseVideo'); }, 1500);
-      setTimeout(function () { testCall('seekTo', 10, true); }, 2500);
-      setTimeout(function () { testCall('mute'); }, 3500);
-      setTimeout(function () { testCall('unMute'); }, 4500);
-      setTimeout(function () { testCall('setVolume', 30); }, 5500);
-      setTimeout(function () { testCall('setPlaybackRate', 1.5); }, 6500);
-      setTimeout(function () { testCall('setPlaybackRate', 1); }, 7500);
-
-      setTimeout(function () {
-        log('=== Test suite complete ===', 'info');
-        log('Events fired during test:', 'info');
-        Object.keys(eventsFired).forEach(function (k) {
-          log('  ' + k + ': ' + (eventsFired[k] ? 'YES' : 'NO'),
-            eventsFired[k] ? 'pass' : 'warn-text');
-        });
-      }, 9000);
-    });
+  function clearAll() {
+    document.getElementById('msgLog').innerHTML = '';
+    document.getElementById('testLog').innerHTML = '';
   }
 </script>
 </body>
