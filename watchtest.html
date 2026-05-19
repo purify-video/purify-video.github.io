@@ -18,6 +18,13 @@
       margin-bottom: 12px;
     }
 
+    h2 {
+      font-size: 16px;
+      margin-top: 24px;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
     .buttons {
       display: flex;
       flex-wrap: wrap;
@@ -25,12 +32,17 @@
       margin-bottom: 16px;
     }
 
-    button {
+    button,
+    select,
+    input {
       padding: 10px 13px;
       font-size: 14px;
-      cursor: pointer;
       border: 0;
       border-radius: 6px;
+    }
+
+    button {
+      cursor: pointer;
       background: #ff0000;
       color: #fff;
       font-weight: bold;
@@ -42,6 +54,56 @@
 
     button.cool {
       background: #5b2cff;
+    }
+
+    button.test {
+      background: #0b6bcb;
+    }
+
+    button.warning {
+      background: #b45309;
+    }
+
+    button.active {
+      outline: 3px solid #fff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.45);
+    }
+
+    select,
+    input {
+      background: #222;
+      color: #fff;
+      border: 1px solid #555;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    .configGrid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: end;
+      margin-bottom: 16px;
+      max-width: 1000px;
+    }
+
+    #currentConfig {
+      max-width: 1000px;
+      white-space: pre-wrap;
+      font-size: 13px;
+      line-height: 1.45;
+      color: #ddd;
+      background: #181818;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      border: 1px solid #333;
     }
 
     #playerShell {
@@ -117,6 +179,85 @@
 
   <h1>YouTube IFrame API Proxy Test</h1>
 
+  <div id="currentConfig">Loading config...</div>
+
+  <h2>Preset tests</h2>
+
+  <div class="buttons">
+    <button class="test" data-preset="current">YT origin + iframe remove + page origin</button>
+    <button class="test" data-preset="no-referrer">No referrer test, likely 153</button>
+    <button class="test" data-preset="origin">Referrer origin</button>
+    <button class="test" data-preset="strict-origin">Strict origin</button>
+    <button class="test" data-preset="remove-origin-page-origin">Remove origin + page origin</button>
+    <button class="test" data-preset="purifyvideo-origin">PurifyVideo origin</button>
+    <button class="test" data-preset="default">Default YouTube widget behaviour</button>
+  </div>
+
+  <h2>Custom test</h2>
+
+  <div class="configGrid">
+    <label>
+      Proxy origin param
+      <select id="originSelect">
+        <option value="default">default</option>
+        <option value="remove">remove</option>
+        <option value="https://www.youtube.com">https://www.youtube.com</option>
+        <option value="https://purifyvideo.com">https://purifyvideo.com</option>
+        <option value="https://purify-video.github.io">https://purify-video.github.io</option>
+      </select>
+    </label>
+
+    <label>
+      Iframe referrerPolicy
+      <select id="referrerSelect">
+        <option value="default">default</option>
+        <option value="remove">remove attribute</option>
+        <option value="no-referrer">no-referrer</option>
+        <option value="origin">origin</option>
+        <option value="strict-origin">strict-origin</option>
+        <option value="origin-when-cross-origin">origin-when-cross-origin</option>
+        <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
+        <option value="unsafe-url">unsafe-url</option>
+      </select>
+    </label>
+
+    <label>
+      Parent page referrer meta
+      <select id="pageReferrerSelect">
+        <option value="default">default</option>
+        <option value="no-referrer">no-referrer</option>
+        <option value="origin">origin</option>
+        <option value="strict-origin">strict-origin</option>
+        <option value="origin-when-cross-origin">origin-when-cross-origin</option>
+        <option value="strict-origin-when-cross-origin">strict-origin-when-cross-origin</option>
+        <option value="unsafe-url">unsafe-url</option>
+      </select>
+    </label>
+
+    <label>
+      Embed host
+      <select id="hostSelect">
+        <option value="youtube">https://www.youtube.com</option>
+        <option value="nocookie">https://www.youtube-nocookie.com</option>
+      </select>
+    </label>
+
+    <label>
+      Video ID
+      <input id="videoIdInput" value="ko70cExuzZM" maxlength="11">
+    </label>
+
+    <button id="applyCustomBtn" class="test">Apply Custom Test</button>
+  </div>
+
+  <div class="buttons">
+    <button id="openProxyBtn" class="secondary">Open Proxy JS</button>
+    <button id="copyProxyBtn" class="secondary">Copy Proxy URL</button>
+    <button id="clearParamsBtn" class="warning">Clear URL Params</button>
+  </div>
+
+  <h2>Player</h2>
+
   <div class="buttons">
     <button id="buildPlayerBtn">Build Player</button>
     <button id="destroyBtn" class="secondary">Destroy</button>
@@ -127,6 +268,7 @@
     <button id="iframeBtn">Get Iframe ID</button>
     <button id="videoDataBtn">Get Title + Author</button>
     <button id="srcBtn">Show Iframe Src</button>
+    <button id="referrerPolicyBtn">Show Iframe Referrer Policy</button>
   </div>
 
   <div class="buttons">
@@ -162,20 +304,65 @@
   <div id="log">Waiting...</div>
 
   <script>
-    var API_URL = "https://purifyvideo.com/widgetapi-proxy.php?origin=https%3A%2F%2Fwww.youtube.com&referrer=remove&page_referrer=origin";
+    var PROXY_BASE = "https://purifyvideo.com/widgetapi-proxy.php";
+
+    var urlParams = new URLSearchParams(window.location.search);
+
+    var currentOriginMode = urlParams.get("origin") || "https://www.youtube.com";
+    var currentReferrerMode = urlParams.get("referrer") || "remove";
+    var currentPageReferrerMode = urlParams.get("page_referrer") || "origin";
+    var currentHostMode = urlParams.get("host") || "youtube";
+    var testVideoId = urlParams.get("v") || "ko70cExuzZM";
+
+    if (!/^[a-zA-Z0-9_-]{11}$/.test(testVideoId)) {
+      testVideoId = "ko70cExuzZM";
+    }
 
     var player = null;
     var youtubeApiReady = false;
     var pendingBuild = false;
 
-    var testVideoId = "ko70cExuzZM";
-
     var logEl = document.getElementById("log");
     var playerShell = document.getElementById("playerShell");
     var playerMount = document.getElementById("playerMount");
+    var currentConfigEl = document.getElementById("currentConfig");
 
     var pipWindow = null;
     var pipPlaceholder = null;
+
+    function proxyUrl() {
+      var p = new URLSearchParams();
+
+      if (currentOriginMode !== "default") {
+        p.set("origin", currentOriginMode);
+      }
+
+      if (currentReferrerMode !== "default") {
+        p.set("referrer", currentReferrerMode);
+      }
+
+      if (currentPageReferrerMode !== "default") {
+        p.set("page_referrer", currentPageReferrerMode);
+      }
+
+      /*
+        Cache-bust the browser request while testing.
+        Your PHP proxy may still internally cache based on origin/referrer/page_referrer.
+      */
+      p.set("_t", String(Date.now()));
+
+      return PROXY_BASE + "?" + p.toString();
+    }
+
+    var API_URL = proxyUrl();
+
+    function selectedHost() {
+      if (currentHostMode === "nocookie") {
+        return "https://www.youtube-nocookie.com";
+      }
+
+      return "https://www.youtube.com";
+    }
 
     function log(msg) {
       logEl.textContent = msg;
@@ -187,6 +374,208 @@
       console.log(msg);
     }
 
+    function updateConfigBox() {
+      var expectedReferer = "";
+
+      if (currentPageReferrerMode === "no-referrer" || currentReferrerMode === "no-referrer") {
+        expectedReferer = "Likely no Referer header, but this may cause YouTube Error 153.";
+      } else if (
+        currentPageReferrerMode === "origin" ||
+        currentPageReferrerMode === "strict-origin" ||
+        currentPageReferrerMode === "origin-when-cross-origin" ||
+        currentPageReferrerMode === "strict-origin-when-cross-origin"
+      ) {
+        expectedReferer = "Expected Referer header: " + window.location.origin + "/";
+      } else {
+        expectedReferer = "Expected Referer depends on browser/default policy. Usually origin-level on modern Chrome.";
+      }
+
+      currentConfigEl.textContent =
+        "Current test config" +
+        "\nVideo ID: " + testVideoId +
+        "\nEmbed host: " + selectedHost() +
+        "\nProxy origin mode: " + currentOriginMode +
+        "\nIframe referrer mode: " + currentReferrerMode +
+        "\nPage referrer mode: " + currentPageReferrerMode +
+        "\nProxy script URL: " + API_URL +
+        "\n" + expectedReferer +
+        "\n\nUse DevTools > Network > click the youtube.com/embed request > Request Headers > Referer.";
+    }
+
+    function setControlsFromCurrentConfig() {
+      document.getElementById("originSelect").value = currentOriginMode;
+      document.getElementById("referrerSelect").value = currentReferrerMode;
+      document.getElementById("pageReferrerSelect").value = currentPageReferrerMode;
+      document.getElementById("hostSelect").value = currentHostMode;
+      document.getElementById("videoIdInput").value = testVideoId;
+    }
+
+    function reloadWithConfig(origin, referrer, pageReferrer, host, videoId) {
+      var p = new URLSearchParams();
+
+      p.set("origin", origin);
+      p.set("referrer", referrer);
+      p.set("page_referrer", pageReferrer);
+      p.set("host", host || currentHostMode || "youtube");
+      p.set("v", videoId || testVideoId);
+      p.set("r", String(Date.now()));
+
+      window.location.search = p.toString();
+    }
+
+    function applyPreset(name) {
+      if (name === "current") {
+        reloadWithConfig(
+          "https://www.youtube.com",
+          "remove",
+          "origin",
+          "youtube",
+          testVideoId
+        );
+        return;
+      }
+
+      if (name === "no-referrer") {
+        reloadWithConfig(
+          "https://www.youtube.com",
+          "no-referrer",
+          "no-referrer",
+          "youtube",
+          testVideoId
+        );
+        return;
+      }
+
+      if (name === "origin") {
+        reloadWithConfig(
+          "https://www.youtube.com",
+          "origin",
+          "origin",
+          "youtube",
+          testVideoId
+        );
+        return;
+      }
+
+      if (name === "strict-origin") {
+        reloadWithConfig(
+          "https://www.youtube.com",
+          "strict-origin",
+          "strict-origin",
+          "youtube",
+          testVideoId
+        );
+        return;
+      }
+
+      if (name === "remove-origin-page-origin") {
+        reloadWithConfig(
+          "remove",
+          "remove",
+          "origin",
+          "youtube",
+          testVideoId
+        );
+        return;
+      }
+
+      if (name === "purifyvideo-origin") {
+        reloadWithConfig(
+          "https://purifyvideo.com",
+          "origin",
+          "origin",
+          "youtube",
+          testVideoId
+        );
+        return;
+      }
+
+      if (name === "default") {
+        reloadWithConfig(
+          "default",
+          "default",
+          "default",
+          "youtube",
+          testVideoId
+        );
+      }
+    }
+
+    function markActivePresetButtons() {
+      var buttons = document.querySelectorAll("[data-preset]");
+
+      buttons.forEach(function (btn) {
+        btn.classList.remove("active");
+      });
+
+      buttons.forEach(function (btn) {
+        var name = btn.getAttribute("data-preset");
+
+        if (
+          name === "current" &&
+          currentOriginMode === "https://www.youtube.com" &&
+          currentReferrerMode === "remove" &&
+          currentPageReferrerMode === "origin"
+        ) {
+          btn.classList.add("active");
+        }
+
+        if (
+          name === "no-referrer" &&
+          currentOriginMode === "https://www.youtube.com" &&
+          currentReferrerMode === "no-referrer" &&
+          currentPageReferrerMode === "no-referrer"
+        ) {
+          btn.classList.add("active");
+        }
+
+        if (
+          name === "origin" &&
+          currentOriginMode === "https://www.youtube.com" &&
+          currentReferrerMode === "origin" &&
+          currentPageReferrerMode === "origin"
+        ) {
+          btn.classList.add("active");
+        }
+
+        if (
+          name === "strict-origin" &&
+          currentOriginMode === "https://www.youtube.com" &&
+          currentReferrerMode === "strict-origin" &&
+          currentPageReferrerMode === "strict-origin"
+        ) {
+          btn.classList.add("active");
+        }
+
+        if (
+          name === "remove-origin-page-origin" &&
+          currentOriginMode === "remove" &&
+          currentReferrerMode === "remove" &&
+          currentPageReferrerMode === "origin"
+        ) {
+          btn.classList.add("active");
+        }
+
+        if (
+          name === "purifyvideo-origin" &&
+          currentOriginMode === "https://purifyvideo.com" &&
+          currentReferrerMode === "origin" &&
+          currentPageReferrerMode === "origin"
+        ) {
+          btn.classList.add("active");
+        }
+
+        if (
+          name === "default" &&
+          currentOriginMode === "default" &&
+          currentReferrerMode === "default" &&
+          currentPageReferrerMode === "default"
+        ) {
+          btn.classList.add("active");
+        }
+      });
+    }
+
     function ensurePlayerTarget() {
       playerMount.innerHTML = '<div id="playerTarget"></div>';
     }
@@ -196,12 +585,16 @@
         log("Player is not built yet.");
         return null;
       }
+
       return player;
     }
 
     function getIframeOrWarn() {
       var p = getPlayerOrWarn();
-      if (!p) return null;
+
+      if (!p) {
+        return null;
+      }
 
       try {
         return p.getIframe();
@@ -213,7 +606,10 @@
 
     function setUsefulIframePermissions() {
       var iframe = getIframeOrWarn();
-      if (!iframe) return;
+
+      if (!iframe) {
+        return;
+      }
 
       iframe.setAttribute(
         "allow",
@@ -253,7 +649,7 @@
       var firstScriptTag = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-      log("Loading YouTube IFrame API from proxy...");
+      log("Loading YouTube IFrame API from proxy:\n" + API_URL);
     }
 
     window.onYouTubeIframeAPIReady = function () {
@@ -289,11 +685,8 @@
         width: "100%",
         height: "100%",
         videoId: testVideoId,
+        host: selectedHost(),
 
-        /*
-          For production, origin is the normal/safe route.
-          Do not try to bypass YouTube's origin/security logic.
-        */
         playerVars: {
           autoplay: 1,
           controls: 1,
@@ -302,8 +695,7 @@
           playsinline: 1,
           rel: 0,
           modestbranding: 1,
-          iv_load_policy: 3,
-          origin: window.location.origin
+          iv_load_policy: 3
         },
 
         events: {
@@ -359,7 +751,10 @@
 
     function getDuration() {
       var p = getPlayerOrWarn();
-      if (!p) return;
+
+      if (!p) {
+        return;
+      }
 
       var duration = p.getDuration();
       log("Duration: " + duration + " seconds");
@@ -367,7 +762,10 @@
 
     function getIframeDetails() {
       var iframe = getIframeOrWarn();
-      if (!iframe) return;
+
+      if (!iframe) {
+        return;
+      }
 
       log(
         "Iframe details:" +
@@ -375,13 +773,18 @@
         "\nTag: " + iframe.tagName +
         "\nWidth: " + iframe.width +
         "\nHeight: " + iframe.height +
-        "\nAllow: " + iframe.getAttribute("allow")
+        "\nAllow: " + iframe.getAttribute("allow") +
+        "\nReferrerPolicy attribute: " + iframe.getAttribute("referrerpolicy") +
+        "\nreferrerPolicy property: " + iframe.referrerPolicy
       );
     }
 
     function getVideoData() {
       var p = getPlayerOrWarn();
-      if (!p) return;
+
+      if (!p) {
+        return;
+      }
 
       var data = p.getVideoData ? p.getVideoData() : {};
 
@@ -395,9 +798,27 @@
 
     function showIframeSrc() {
       var iframe = getIframeOrWarn();
-      if (!iframe) return;
+
+      if (!iframe) {
+        return;
+      }
 
       log("Iframe src:\n" + iframe.src);
+    }
+
+    function showIframeReferrerPolicy() {
+      var iframe = getIframeOrWarn();
+
+      if (!iframe) {
+        return;
+      }
+
+      log(
+        "Iframe referrer policy:" +
+        "\nAttribute: " + iframe.getAttribute("referrerpolicy") +
+        "\nProperty: " + iframe.referrerPolicy +
+        "\n\nCheck the real request header in DevTools > Network > youtube.com/embed > Request Headers > Referer."
+      );
     }
 
     function playVideo() {
@@ -412,6 +833,7 @@
 
     function muteVideo() {
       var p = getPlayerOrWarn();
+
       if (p) {
         p.mute();
         log("Muted.");
@@ -420,6 +842,7 @@
 
     function unmuteVideo() {
       var p = getPlayerOrWarn();
+
       if (p) {
         p.unMute();
         log("Unmuted.");
@@ -428,7 +851,10 @@
 
     function seekForward() {
       var p = getPlayerOrWarn();
-      if (!p) return;
+
+      if (!p) {
+        return;
+      }
 
       var now = p.getCurrentTime();
       p.seekTo(now + 30, true);
@@ -437,7 +863,10 @@
 
     function setVolumeHalf() {
       var p = getPlayerOrWarn();
-      if (!p) return;
+
+      if (!p) {
+        return;
+      }
 
       p.setVolume(50);
       log("Volume set to 50%.");
@@ -455,7 +884,10 @@
 
     async function fullscreenIframe() {
       var iframe = getIframeOrWarn();
-      if (!iframe) return;
+
+      if (!iframe) {
+        return;
+      }
 
       try {
         if (iframe.requestFullscreen) {
@@ -474,13 +906,11 @@
 
     async function openDocumentPip() {
       var iframe = getIframeOrWarn();
-      if (!iframe) return;
 
-      /*
-        This is not native video PiP.
-        It uses Chrome's Document Picture-in-Picture API, where available,
-        and moves the whole iframe into a small always-on-top window.
-      */
+      if (!iframe) {
+        return;
+      }
+
       if (!window.documentPictureInPicture ||
           typeof window.documentPictureInPicture.requestWindow !== "function") {
         log("Document Picture-in-Picture is not supported in this browser.");
@@ -540,6 +970,46 @@
       }
     }
 
+    document.querySelectorAll("[data-preset]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        applyPreset(btn.getAttribute("data-preset"));
+      });
+    });
+
+    document.getElementById("applyCustomBtn").addEventListener("click", function () {
+      var customVideoId = document.getElementById("videoIdInput").value.trim();
+
+      if (!/^[a-zA-Z0-9_-]{11}$/.test(customVideoId)) {
+        alert("Invalid YouTube video ID.");
+        return;
+      }
+
+      reloadWithConfig(
+        document.getElementById("originSelect").value,
+        document.getElementById("referrerSelect").value,
+        document.getElementById("pageReferrerSelect").value,
+        document.getElementById("hostSelect").value,
+        customVideoId
+      );
+    });
+
+    document.getElementById("openProxyBtn").addEventListener("click", function () {
+      window.open(API_URL, "_blank", "noopener,noreferrer");
+    });
+
+    document.getElementById("copyProxyBtn").addEventListener("click", async function () {
+      try {
+        await navigator.clipboard.writeText(API_URL);
+        log("Copied proxy URL:\n" + API_URL);
+      } catch (e) {
+        log("Could not copy. Proxy URL:\n" + API_URL);
+      }
+    });
+
+    document.getElementById("clearParamsBtn").addEventListener("click", function () {
+      window.location.href = window.location.pathname;
+    });
+
     document.getElementById("buildPlayerBtn").addEventListener("click", buildPlayer);
     document.getElementById("destroyBtn").addEventListener("click", destroyPlayer);
 
@@ -547,6 +1017,7 @@
     document.getElementById("iframeBtn").addEventListener("click", getIframeDetails);
     document.getElementById("videoDataBtn").addEventListener("click", getVideoData);
     document.getElementById("srcBtn").addEventListener("click", showIframeSrc);
+    document.getElementById("referrerPolicyBtn").addEventListener("click", showIframeReferrerPolicy);
 
     document.getElementById("playBtn").addEventListener("click", playVideo);
     document.getElementById("pauseBtn").addEventListener("click", pauseVideo);
@@ -582,6 +1053,10 @@
     document.getElementById("fullscreenBtn").addEventListener("click", fullscreenIframe);
     document.getElementById("docPipBtn").addEventListener("click", openDocumentPip);
     document.getElementById("allowBtn").addEventListener("click", setUsefulIframePermissions);
+
+    setControlsFromCurrentConfig();
+    updateConfigBox();
+    markActivePresetButtons();
   </script>
 
 </body>
