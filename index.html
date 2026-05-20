@@ -3,17 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Watch purified YouTube videos with no ads. Just focus." />
+  <meta name="description" content="Watch purified YouTube videos without ads, comments, or distractions. Free web tool for teachers, students, and presenters. Just paste a link and focus on the content. Just focus." />
   <meta name="google-site-verification" content="HggK7KBADvrDMO0csH7fA6nbskBG9TepblYhkGOiljE" />
   <link rel="canonical" href="https://purify.video/">
   <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <title>purify video – watch purified YouTube videos with no ads</title>
+<!-- Open Graph -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://purify-video.github.io/" />
+<meta property="og:title" content="purify video – watch purified YouTube videos with no ads" />
+<meta property="og:description" content="Watch YouTube videos without ads, comments, or distractions. Free web tool for teachers, students, and presenters. Just paste a link and focus on the content." />
 
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="purify video – watch purified YouTube videos with no ads" />
+<meta name="twitter:description" content="Watch YouTube videos without ads, comments, or distractions. Free web tool for teachers, students, and presenters. Just paste a link and focus on the content." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
   <!-- ✅ Google Font: Noto Sans. -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet" />
 
   <!-- ✅ Google Material Icons: Light Mode & Dark Mode. -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&display=swap" rel="stylesheet" />
 
   <style>
     /* ===================
@@ -41,6 +54,15 @@
       background-color: var(--bg-light);
       color: var(--text-light);
     }
+
+      /* ===================
+       Dark mode-aware input styling:
+    ====================== */
+    [data-theme="dark"] #purify-form input[type="url"] {
+  background-color: #2a2a2c;
+  color: var(--text-dark);
+  border-color: #404040;
+}
 
     /* ===================
        Fonts.
@@ -102,7 +124,7 @@
   align-items: stretch;
 }
 
-#purify-form input[type="text"] {
+#purify-form input[type="url"] {
   flex: 1;
   min-width: 0;
   padding: 0.75rem 1rem;
@@ -114,7 +136,7 @@
   min-height: 48px;
 }
 
-#purify-form input[type="text"]:focus {
+#purify-form input[type="url"]:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(70, 170, 233, 0.25);
@@ -689,7 +711,7 @@
       <span class="fallback-icon">☀️</span>
     </span>
     <label class="switch">
-      <input type="checkbox" id="theme-checkbox" onchange="toggleTheme()" />
+      <input type="checkbox" id="theme-checkbox" onchange="toggleTheme()" aria-label="Toggle dark mode" />
       <span class="slider"></span>
     </label>
     <span class="icon-label">
@@ -703,17 +725,16 @@
     <h2>Watch purified YouTube videos with no ads. Just focus</h2>
 
     <p class="official-domain-note">
-      Official domain: <a href="https://purify.video/">purify.video</a>
+      Official domain: <a href="https://purify.video/" rel="noopener">purify.video</a>
     </p>
 
   <form id="purify-form">
   <label for="youtube-input" class="visually-hidden">YouTube video or playlist URL</label>
-  <input id="youtube-input" type="text" name="v" placeholder="Paste a YouTube video or playlist URL" />
+  <input id="youtube-input" type="url" name="v" placeholder="Paste a YouTube video or playlist URL" />
   <button type="submit">Purify</button>
 </form>
 
     <p class="form-note">
-      Old links still work here. New searches open on the official purify.video domain.
     </p>
   </header>
 
@@ -745,6 +766,23 @@
     <p>This website <strong>does not store</strong> any data such as cookies to enable essential site functionality.</p>
   </footer>
 
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Purify Video",
+  "url": "https://purify-video.github.io/",
+  "description": "Watch YouTube videos without ads, comments, or distractions. Free web tool for teachers, students, and presenters.",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Any",
+  "browserRequirements": "Requires a modern web browser",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
   <!-- Default Statcounter code for Purify Video
   https://purify-video.github.io -->
   <script type="text/javascript">
