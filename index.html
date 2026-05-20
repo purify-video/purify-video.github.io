@@ -82,25 +82,65 @@
     /* ===================
        Input and buttons.
     ====================== */
-    input[type="text"] {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 0.25rem;
-      border: 1px solid var(--input-border);
-      background-color: var(--input-bg);
-      color: var(--text-light);
-    }
+#purify-form {
+  display: flex;
+  gap: 0.5rem;
+  max-width: 560px;
+  margin: 1.5rem auto 0.5rem;
+  align-items: stretch;
+}
 
-    button {
-      margin-left: 0.5rem;
-      padding: 0.5rem 1rem;
-      background-color: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 0.25rem;
-      cursor: pointer;
-      font-weight: 600;
-    }
+#purify-form input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-light);
+  min-height: 48px;
+}
+
+#purify-form input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(70, 170, 233, 0.25);
+}
+
+#purify-form button {
+  margin: 0;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  min-height: 48px;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+#purify-form button:hover {
+  background-color: #3593cf;
+}
+
+#purify-form button:focus-visible {
+  outline: 3px solid rgba(70, 170, 233, 0.5);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  #purify-form {
+    flex-direction: column;
+    max-width: 100%;
+  }
+  #purify-form button {
+    width: 100%;
+  }
+}
 
     a {
       color: inherit;
@@ -124,17 +164,7 @@
       margin-top: 0.75rem;
     }
 
-    /* ===================
-       Responsive.
-    ====================== */
-    @media (max-width: 600px) {
-      input[type="text"], button {
-        display: block;
-        width: 100%;
-        margin: 0.5rem 0;
-      }
-    }
-
+  
     /* ==========================
        Toggle switch with icons.
     ============================= */
@@ -664,10 +694,11 @@
       Official domain: <a href="https://purify.video/">purify.video</a>
     </p>
 
-    <form id="purify-form">
-      <input id="youtube-input" type="text" name="v" placeholder="Enter YouTube URL" />
-      <button type="submit">Purify</button>
-    </form>
+  <form id="purify-form">
+  <label for="youtube-input" class="visually-hidden">YouTube video or playlist URL</label>
+  <input id="youtube-input" type="text" name="v" placeholder="Paste a YouTube video or playlist URL" />
+  <button type="submit">Purify</button>
+</form>
 
     <p class="form-note">
       Old links still work here. New searches open on the official purify.video domain.
@@ -685,7 +716,7 @@
   </section>
 
   <section>
-    <h1>Are you looking for a way to enhance your YouTube viewing experience?</h1>
+    <h2>Are you looking for a way to enhance your YouTube viewing experience?</h2>
     <p>This app offers a clean and minimalistic interface for a distraction-free experience.</p>
     <p>Teachers, students, parents, and organizers can use our app to remove ads, comments, and distracting sidebar videos.</p>
     <p>Ensure your viewers see only the content you want them to see—nothing more, nothing less.</p>
