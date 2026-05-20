@@ -186,6 +186,37 @@
       margin-bottom: 0.5rem;
       border-bottom: 1px solid #ccc;
     }
+    .brand-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border-bottom: none;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  background: linear-gradient(135deg, var(--primary), rgba(70, 170, 233, 0.5));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.brand-mark svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  margin-left: 1px;
+}
+
+.brand-text-accent {
+  color: var(--primary);
+}
 
     .official-domain-note {
       font-size: 0.95rem;
@@ -721,7 +752,12 @@
   </div>
 
   <header>
-    <h1>purify video</h1>
+   <h1 class="brand-heading">
+  <span class="brand-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 7l9 5-9 5z" fill="#fff"/></svg>
+  </span>
+  purify.<span class="brand-text-accent">video</span>
+</h1>
     <h2>Watch purified YouTube videos with no ads. Just focus</h2>
 
     <p class="official-domain-note">
